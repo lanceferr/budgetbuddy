@@ -1,3 +1,3 @@
-# BudgetBuddy
+# budgetbuddy
 
 > A student-friendly budget tracking application
