@@ -15,7 +15,9 @@ const isValidPassword = (password: string): boolean => {
 };
 
 export const login = async (req : express.Request, res: express.Response) => {
+
 	try {
+		
 		const { email, password} = req.body;
 
 		// check if fields are empty
@@ -42,12 +44,14 @@ export const login = async (req : express.Request, res: express.Response) => {
 		await user.save();
 
 		res.cookie('AUTH', user.authentication.sessionToken, {
+
 			domain: 'localhost', 
 			path: "/",
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
 			sameSite: 'strict',
 			maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+
 		});
 
 		return res.status(200).json({
@@ -57,16 +61,21 @@ export const login = async (req : express.Request, res: express.Response) => {
 				email: user.email,
 				username: user.username
 			}
+
 		}).end();
 
-	} catch (error) {
+	} catch(error) {
+
 		console.log(error);
 		return res.status(500).json({ error: 'Login failed' });
 	}
+
 }
 
 export const register = async (req : express.Request, res: express.Response) => {
+
 	try {
+
 		const { email, username, password} = req.body;
 
 		// check if fields are empty
@@ -90,7 +99,7 @@ export const register = async (req : express.Request, res: express.Response) => 
 		}
 
 		const existingUser = await getUserByEmail(email);
-		// check if user is existing
+		// checks if user is exists!!
 		if(existingUser) {
 			return res.status(400).json({ error: 'User already exists' });
 		}
@@ -98,39 +107,52 @@ export const register = async (req : express.Request, res: express.Response) => 
 		const salt = random();
 
 		const user = await createUser({
+
 			email,
 			username,
 			authentication: {
 				salt,
 				password: authentication(salt, password)
 			},
+
 		})
 		
 		return res.status(201).json({
+
 			message: 'Registration successful',
 			user: {
 				id: user._id,
 				email: user.email,
 				username: user.username
 			}
+
 		}).end();
 
-	} catch (error) {
+	} catch(error) {
+
 		console.log(error)
 		return res.status(500).json({ error: 'Registration failed' });
+
 	}
+
 }
 
 export const logout = async (req: express.Request, res: express.Response) => {
+
 	try {
+
 		res.clearCookie('AUTH', {
 			domain: 'localhost',
 			path: '/'
 		});
 
 		return res.status(200).json({ message: 'Logout successful' });
-	} catch (error) {
+
+	} catch(error) {
+
 		console.log(error);
 		return res.status(500).json({ error: 'Logout failed' });
+
 	}
+
 };
