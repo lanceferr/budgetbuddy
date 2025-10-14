@@ -89,7 +89,6 @@ export const deleteUserById = (id : string) => UserModel.findOneAndDelete({_id :
 export const updateUserById = (id : string, values: Record<string, any>) =>
   UserModel.findByIdAndUpdate(id, values, { new: true, runValidators: true }).lean();
 
-// Password Reset Operations
 export const getUserByResetToken = (resetToken: string) => 
   UserModel.findOne({ 
     'authentication.resetPasswordToken': resetToken,

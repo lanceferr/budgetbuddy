@@ -2,13 +2,11 @@ import express from 'express';
 import { getUserByEmail, createUser, getUserByEmailWithAuth, setResetToken, getUserByResetToken, clearResetToken, updateUserById } from '../db/users.js'
 import { random, authentication } from '../helpers/index.js'
 
-// Email validation helper
 const isValidEmail = (email: string): boolean => {
 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	return emailRegex.test(email);
 };
 
-// Enhanced password validation with detailed errors (Industry Standard)
 const validatePassword = (password: string): { isValid: boolean; errors: string[] } => {
 	const errors: string[] = [];
 	
@@ -44,14 +42,12 @@ export const login = async (req : express.Request, res: express.Response) => {
 
 		const { email, password} = req.body;
 
-		// check if fields are empty
 		if(!email || !password){
 			return res.status(400).json({ error: 'Email and password are required' });
 		}
 
 		const user = await getUserByEmailWithAuth(email);
 
-		// check if user does exist
 		if(!user || !user.authentication){
 			return res.status(400).json({ error: 'Invalid credentials' });
 		}
@@ -65,7 +61,6 @@ export const login = async (req : express.Request, res: express.Response) => {
 		const salt = random();
 		user.authentication.sessionToken = authentication(salt, user._id.toString());
 		
-		// Set session expiry to 7 days from now
 		const sessionExpiry = new Date();
 		sessionExpiry.setDate(sessionExpiry.getDate() + 7);
 		user.authentication.sessionExpiry = sessionExpiry;
@@ -107,17 +102,14 @@ export const register = async (req : express.Request, res: express.Response) => 
 
 		const { email, username, password} = req.body;
 
-		// check if fields are empty
 		if (!email || !password || !username){
 			return res.status(400).json({ error: 'Email, username, and password are required' });
 		}
 
-		// Validate email format
 		if (!isValidEmail(email)) {
 			return res.status(400).json({ error: 'Invalid email format' });
 		}
 
-		// Validate password strength with detailed errors
 		const passwordValidation = validatePassword(password);
 		if (!passwordValidation.isValid) {
 			return res.status(400).json({ 
@@ -126,13 +118,11 @@ export const register = async (req : express.Request, res: express.Response) => 
 			});
 		}
 
-		// Validate username length
 		if (username.length < 3 || username.length > 30) {
 			return res.status(400).json({ error: 'Username must be between 3 and 30 characters' });
 		}
 
 		const existingUser = await getUserByEmail(email);
-		// checks if user is exists!!
 		if(existingUser) {
 			return res.status(400).json({ error: 'User already exists' });
 		}
@@ -190,21 +180,18 @@ export const logout = async (req: express.Request, res: express.Response) => {
 
 };
 
-// TEST ENDPOINT: Login with short expiry (1 minute) - for testing session expiration
 export const loginWithShortExpiry = async (req: express.Request, res: express.Response) => {
 
 	try {
 		
 		const { email, password } = req.body;
 
-		// check if fields are empty
 		if (!email || !password) {
 			return res.status(400).json({ error: 'Email and password are required' });
 		}
 
 		const user = await getUserByEmailWithAuth(email);
 
-		// check if user does exist
 		if (!user || !user.authentication) {
 			return res.status(400).json({ error: 'Invalid credentials' });
 		}
@@ -218,7 +205,6 @@ export const loginWithShortExpiry = async (req: express.Request, res: express.Re
 		const salt = random();
 		user.authentication.sessionToken = authentication(salt, user._id.toString());
 		
-		// Set session expiry to 1 MINUTE from now (for testing)
 		const sessionExpiry = new Date();
 		sessionExpiry.setMinutes(sessionExpiry.getMinutes() + 1);
 		user.authentication.sessionExpiry = sessionExpiry;
@@ -251,26 +237,20 @@ export const loginWithShortExpiry = async (req: express.Request, res: express.Re
 
 };
 
-// REQUEST PASSWORD RESET
 export const requestPasswordReset = async (req: express.Request, res: express.Response) => {
 	try {
 		const { email } = req.body;
 
-		// Validate email is provided
 		if (!email) {
 			return res.status(400).json({ error: 'Email is required' });
 		}
 
-		// Validate email format
 		if (!isValidEmail(email)) {
 			return res.status(400).json({ error: 'Please provide a valid email address' });
 		}
 
-		// Check if user exists
 		const user = await getUserByEmail(email);
 
-		// SECURITY: Always return success even if user doesn't exist
-		// This prevents email enumeration attacks
 		if (!user) {
 			console.log(`Password reset requested for non-existent email: ${email}`);
 			return res.status(200).json({ 
@@ -278,26 +258,18 @@ export const requestPasswordReset = async (req: express.Request, res: express.Re
 			});
 		}
 
-		// Generate secure reset token (256 bits of entropy)
 		const resetToken = random(32);
 
-		// Token expires in 1 hour
 		const resetExpiry = new Date(Date.now() + 60 * 60 * 1000);
 
-		// Save reset token to database
 		await setResetToken(email, resetToken, resetExpiry);
 
-		// TODO: In production, send this via email
-		// For now, we'll return it in the response for testing
 		console.log(`Password reset token for ${email}: ${resetToken}`);
 		console.log(`Token expires at: ${resetExpiry.toISOString()}`);
 
-		// In production, you would send an email here with a link like:
-		// https://yourdomain.com/reset-password?token=${resetToken}
-
 		return res.status(200).json({ 
 			message: 'If an account exists with this email, a password reset link has been sent',
-			// REMOVE THIS IN PRODUCTION - only for testing without email
+			// REMOVE THIS IN THE FUTURE - only for testing without email
 			debug: {
 				resetToken,
 				expiresAt: resetExpiry.toISOString()
@@ -310,17 +282,14 @@ export const requestPasswordReset = async (req: express.Request, res: express.Re
 	}
 };
 
-// RESET PASSWORD
 export const resetPassword = async (req: express.Request, res: express.Response) => {
 	try {
 		const { token, newPassword } = req.body;
 
-		// Validate required fields
 		if (!token || !newPassword) {
 			return res.status(400).json({ error: 'Reset token and new password are required' });
 		}
 
-		// Validate new password
 		const passwordValidation = validatePassword(newPassword);
 		if (!passwordValidation.isValid) {
 			return res.status(400).json({ 
@@ -329,7 +298,6 @@ export const resetPassword = async (req: express.Request, res: express.Response)
 			});
 		}
 
-		// Find user by reset token (will only return if token is valid and not expired)
 		const user = await getUserByResetToken(token);
 
 		if (!user) {
@@ -338,19 +306,16 @@ export const resetPassword = async (req: express.Request, res: express.Response)
 			});
 		}
 
-		// Generate new salt and hash password
 		const salt = random();
 		const hashedPassword = authentication(salt, newPassword);
 
-		// Update password and clear reset token
 		await updateUserById(user._id.toString(), {
 			'authentication.password': hashedPassword,
 			'authentication.salt': salt,
-			'authentication.sessionToken': undefined, // Invalidate all existing sessions
+			'authentication.sessionToken': undefined,
 			'authentication.sessionExpiry': undefined
 		});
 
-		// Clear reset token
 		await clearResetToken(user._id.toString());
 
 		console.log(`Password successfully reset for user: ${user.email}`);
