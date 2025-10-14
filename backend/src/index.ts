@@ -5,12 +5,19 @@ import cookieParser from 'cookie-parser';
 import compression from 'compression';
 import cors from 'cors';
 import mongoose from 'mongoose';
+
+import router from './router/index.ts';
+
 const app = express();
 
 app.use(cors({
   origin: "http://localhost:3000", // frontend URL
   credentials: true
 }));
+
+app.use(compression());
+app.use(cookieParser());
+app.use(express.json());
 
 const server = http.createServer(app);
 
@@ -24,3 +31,4 @@ mongoose.Promise = Promise;
 mongoose.connect(MONGO_URL);
 mongoose.connection.on("error", (error: Error) => console.log(error))
 
+app.use('/', router());
