@@ -1,5 +1,5 @@
 import express from 'express';
-import { getUserByEmail, createUser, getUserByEmailWithAuth } from '../db/users.js'
+import { getUserByEmail, createUser, getUserByEmailWithAuth, setResetToken, getUserByResetToken, clearResetToken, updateUserById } from '../db/users.js'
 import { random, authentication } from '../helpers/index.js'
 
 // Email validation helper
@@ -249,4 +249,118 @@ export const loginWithShortExpiry = async (req: express.Request, res: express.Re
 		return res.status(500).json({ error: 'Login failed' });
 	}
 
+};
+
+// REQUEST PASSWORD RESET
+export const requestPasswordReset = async (req: express.Request, res: express.Response) => {
+	try {
+		const { email } = req.body;
+
+		// Validate email is provided
+		if (!email) {
+			return res.status(400).json({ error: 'Email is required' });
+		}
+
+		// Validate email format
+		if (!isValidEmail(email)) {
+			return res.status(400).json({ error: 'Please provide a valid email address' });
+		}
+
+		// Check if user exists
+		const user = await getUserByEmail(email);
+
+		// SECURITY: Always return success even if user doesn't exist
+		// This prevents email enumeration attacks
+		if (!user) {
+			console.log(`Password reset requested for non-existent email: ${email}`);
+			return res.status(200).json({ 
+				message: 'If an account exists with this email, a password reset link has been sent'
+			});
+		}
+
+		// Generate secure reset token (256 bits of entropy)
+		const resetToken = random(32);
+
+		// Token expires in 1 hour
+		const resetExpiry = new Date(Date.now() + 60 * 60 * 1000);
+
+		// Save reset token to database
+		await setResetToken(email, resetToken, resetExpiry);
+
+		// TODO: In production, send this via email
+		// For now, we'll return it in the response for testing
+		console.log(`Password reset token for ${email}: ${resetToken}`);
+		console.log(`Token expires at: ${resetExpiry.toISOString()}`);
+
+		// In production, you would send an email here with a link like:
+		// https://yourdomain.com/reset-password?token=${resetToken}
+
+		return res.status(200).json({ 
+			message: 'If an account exists with this email, a password reset link has been sent',
+			// REMOVE THIS IN PRODUCTION - only for testing without email
+			debug: {
+				resetToken,
+				expiresAt: resetExpiry.toISOString()
+			}
+		});
+
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json({ error: 'Failed to process password reset request' });
+	}
+};
+
+// RESET PASSWORD
+export const resetPassword = async (req: express.Request, res: express.Response) => {
+	try {
+		const { token, newPassword } = req.body;
+
+		// Validate required fields
+		if (!token || !newPassword) {
+			return res.status(400).json({ error: 'Reset token and new password are required' });
+		}
+
+		// Validate new password
+		const passwordValidation = validatePassword(newPassword);
+		if (!passwordValidation.isValid) {
+			return res.status(400).json({ 
+				error: 'Password does not meet requirements',
+				details: passwordValidation.errors
+			});
+		}
+
+		// Find user by reset token (will only return if token is valid and not expired)
+		const user = await getUserByResetToken(token);
+
+		if (!user) {
+			return res.status(400).json({ 
+				error: 'Invalid or expired reset token. Please request a new password reset.'
+			});
+		}
+
+		// Generate new salt and hash password
+		const salt = random();
+		const hashedPassword = authentication(salt, newPassword);
+
+		// Update password and clear reset token
+		await updateUserById(user._id.toString(), {
+			'authentication.password': hashedPassword,
+			'authentication.salt': salt,
+			'authentication.sessionToken': undefined, // Invalidate all existing sessions
+			'authentication.sessionExpiry': undefined
+		});
+
+		// Clear reset token
+		await clearResetToken(user._id.toString());
+
+		console.log(`Password successfully reset for user: ${user.email}`);
+
+		return res.status(200).json({ 
+			message: 'Password has been successfully reset. You can now login with your new password.'
+		});
+
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json({ error: 'Failed to reset password' });
+	}
 };

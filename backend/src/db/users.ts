@@ -54,6 +54,20 @@ const UserSchema = new mongoose.Schema({
 
         },
 
+        resetPasswordToken: {
+
+            type: String,
+            select: false
+
+        },
+
+        resetPasswordExpiry: {
+
+            type: Date,
+            select: false
+
+        },
+
     },
 
 }, { timestamps: true });
@@ -74,3 +88,34 @@ export const createUser = (values: Record<string, any>) => new UserModel(values)
 export const deleteUserById = (id : string) => UserModel.findOneAndDelete({_id : id}).lean();
 export const updateUserById = (id : string, values: Record<string, any>) =>
   UserModel.findByIdAndUpdate(id, values, { new: true, runValidators: true }).lean();
+
+// Password Reset Operations
+export const getUserByResetToken = (resetToken: string) => 
+  UserModel.findOne({ 
+    'authentication.resetPasswordToken': resetToken,
+    'authentication.resetPasswordExpiry': { $gt: Date.now() } // Token must not be expired
+  }).select('+authentication.resetPasswordToken +authentication.resetPasswordExpiry');
+
+export const setResetToken = async (email: string, token: string, expiry: Date) => {
+  return UserModel.findOneAndUpdate(
+    { email },
+    { 
+      'authentication.resetPasswordToken': token,
+      'authentication.resetPasswordExpiry': expiry
+    },
+    { new: true }
+  );
+};
+
+export const clearResetToken = async (userId: string) => {
+  return UserModel.findByIdAndUpdate(
+    userId,
+    { 
+      $unset: { 
+        'authentication.resetPasswordToken': '',
+        'authentication.resetPasswordExpiry': ''
+      }
+    },
+    { new: true }
+  );
+};
