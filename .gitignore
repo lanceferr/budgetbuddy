@@ -93,6 +93,8 @@ TESTING.md
 POSTMAN-GUIDE.md
 CLEANUP-SUMMARY.md
 conventional-commits.md
+PASSWORD-REQUIREMENTS.md
+SESSION-EXPIRY-TEST.md
 
 node_modules/
 dist/
