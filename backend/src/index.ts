@@ -5,13 +5,14 @@ import cookieParser from 'cookie-parser';
 import compression from 'compression';
 import cors from 'cors';
 import mongoose from 'mongoose';
+import 'dotenv/config';
 
-import router from './router/index.ts';
+import router from './router/index.js';
 
 const app = express();
 
 app.use(cors({
-  origin: "http://localhost:3000", // frontend URL
+  origin: process.env.CORS_ORIGIN || "http://localhost:3000", // frontend URL
   credentials: true
 }));
 
@@ -21,14 +22,19 @@ app.use(express.json());
 
 const server = http.createServer(app);
 
-server.listen(8080,() => {
-	console.log("Server running at http://localhost:8080/");
+const PORT = process.env.PORT || 8080;
+
+server.listen(PORT,() => {
+	console.log(`Server running at http://localhost:${PORT}/`);
 });
 
-const MONGO_URL = "mongodb://localhost:27017/BudgetBuddyDb";
+const MONGO_URL = process.env.MONGO_URL || "mongodb://localhost:27017/BudgetBuddyDb";
 
 mongoose.Promise = Promise;
 mongoose.connect(MONGO_URL);
-mongoose.connection.on("error", (error: Error) => console.log(error))
+mongoose.connection.on("error", (error: Error) => console.log(error));
+mongoose.connection.once("open", () => {
+	console.log(`Connected to MongoDB at ${MONGO_URL}`);
+});
 
 app.use('/', router());
