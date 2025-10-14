@@ -1,8 +1,14 @@
-import crypto from 'crypto';
+import { createHmac, randomBytes } from 'node:crypto';
 
-const SECRET = "RANDOM";
+const PEPPER = process.env.AUTH_SECRET ?? 'change-me';
 
-export const random = () => crypto.randomBytes(128).toString("base64");
-export const authentication = (salt : string, password : string) => {
-	return.crypto.createHmac('sha256',[salt, password].join('/')).update(SECRET).digest('hex')
+export const random = (size = 32) => randomBytes(size).toString('base64url');
+
+export const authentication = (salt: string, password: string) => {
+
+  return createHmac('sha256', [salt, PEPPER].join('/'))
+
+    .update(password)
+    .digest('hex');
+	
 };
