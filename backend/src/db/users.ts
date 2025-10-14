@@ -47,6 +47,13 @@ const UserSchema = new mongoose.Schema({
 
         },
 
+        sessionExpiry: {
+
+            type: Date,
+            select: false
+
+        },
+
     },
 
 }, { timestamps: true });
@@ -60,7 +67,7 @@ export const getUserByEmailWithAuth = (email: string) =>
 
 export const getUserBySessionToken = (sessionToken : string) => UserModel.findOne({
     'authentication.sessionToken' : sessionToken,
-}).lean();
+}).select('+authentication.sessionExpiry');
 
 export const getUserById = (id : string) => UserModel.findById(id).lean();
 export const createUser = (values: Record<string, any>) => new UserModel(values).save().then((user) => user.toObject());

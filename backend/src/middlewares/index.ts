@@ -6,7 +6,7 @@ import { getUserBySessionToken } from '../db/users.js';
 export const isAuthenticated = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
 	try {
-        
+
 		const sessionToken = req.cookies['AUTH'];
 
 		if(!sessionToken){
@@ -17,6 +17,16 @@ export const isAuthenticated = async (req: express.Request, res: express.Respons
 
 		if(!existingUser){
 			return res.status(401).json({ error: 'Invalid session' });
+		}
+
+		// Check if session has expired
+		if (existingUser.authentication?.sessionExpiry) {
+			const now = new Date();
+			const expiry = new Date(existingUser.authentication.sessionExpiry);
+			
+			if (now > expiry) {
+				return res.status(401).json({ error: 'Session expired. Please log in again.' });
+			}
 		}
 
 		_.merge(req, { identity: existingUser });
