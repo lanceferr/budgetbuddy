@@ -1,8 +1,9 @@
 import express from 'express';
-import { isAuthenticated, isOwner } from '../middlewares/index.js'
+import { isAuthenticated } from '../middlewares/index.js'
 import { addExpense, getExpenses } from '../controllers/expenses.js'
 
 export default (router : express.Router) => {
-	router.post('/expenses/:id', isAuthenticated, isOwner, addExpense);
-	router.get('/expenses/:id', isAuthenticated, isOwner, getExpenses)
+	// No :id parameter needed - uses session user ID
+	router.post('/expenses', isAuthenticated, addExpense);
+	router.get('/expenses', isAuthenticated, getExpenses);
 };

@@ -1,9 +1,16 @@
 import express from 'express';
+import _ from 'lodash';
 import { createExpense, getExpensesByUser, getTotalExpenses} from '../db/expenses.js'
 
 export const addExpense = async (req : express.Request, res : express.Response) => {
 	try {
-		const { id } = req.params;
+		// Get userId from authenticated session (not from URL)
+		const currentUserId = _.get(req, 'identity._id') as unknown as string;
+		
+		if (!currentUserId) {
+			return res.status(401).json({ error: 'User not authenticated' });
+		}
+		
 		const { amount, name, category, notes, date } = req.body;
 
 		if(!amount || !category || !name){
@@ -15,12 +22,12 @@ export const addExpense = async (req : express.Request, res : express.Response) 
 		}
 
 		const expense = await createExpense({
-			userId : id,
+			userId : currentUserId,  // Use session user ID
 			amount, 
 			name,
 			category, 
 			notes, 
-			date
+			date  // Optional - defaults to today if not provided
 		});
 
 		return res.status(200).json({
@@ -43,13 +50,20 @@ export const addExpense = async (req : express.Request, res : express.Response) 
 
 export const getExpenses = async (req : express.Request, res : express.Response) => {
 	try {
-		const { id } = req.params;
+		// Get userId from authenticated session (not from URL)
+		const currentUserId = _.get(req, 'identity._id') as unknown as string;
+		
+		if (!currentUserId) {
+			return res.status(401).json({ error: 'User not authenticated' });
+		}
+		
 		const { startDate, endDate, category, sort} = req.query;
 
 		const options: any = {};
 
 		if(category){
-			options.category = category;
+			// Decode URL encoding and trim whitespace for better matching
+			options.category = decodeURIComponent(category as string).trim();
 		}
 
 		if(startDate){
@@ -63,9 +77,10 @@ export const getExpenses = async (req : express.Request, res : express.Response)
 		if(sort){
 			options.sort = sort; //format should be {"amount":-1} no space
 		}
-		const expenses = await getExpensesByUser(id, options);
+		
+		const expenses = await getExpensesByUser(currentUserId, options);
 
-		const total = await getTotalExpenses(id, options);
+		const total = await getTotalExpenses(currentUserId, options);
 
 		return res.status(200).json({ 
 			message: "Expenses was retrieved",
