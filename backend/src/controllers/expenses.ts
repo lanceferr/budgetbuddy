@@ -1,10 +1,10 @@
 import express from 'express';
 import _ from 'lodash';
-import { createExpense, getExpensesByUser, getTotalExpenses} from '../db/expenses.js'
+import { createExpense, getExpensesByUser, getTotalExpenses, getExpenseById, updateExpenseById, deleteExpenseById} from '../db/expenses.js'
 
 export const addExpense = async (req : express.Request, res : express.Response) => {
 	try {
-		// Get userId from authenticated session (not from URL)
+
 		const currentUserId = _.get(req, 'identity._id') as unknown as string;
 		
 		if (!currentUserId) {
@@ -22,12 +22,12 @@ export const addExpense = async (req : express.Request, res : express.Response) 
 		}
 
 		const expense = await createExpense({
-			userId : currentUserId,  // Use session user ID
+			userId : currentUserId,
 			amount, 
 			name,
 			category, 
 			notes, 
-			date  // Optional - defaults to today if not provided
+			date  // defaults to today if not provided
 		});
 
 		return res.status(200).json({
@@ -50,7 +50,7 @@ export const addExpense = async (req : express.Request, res : express.Response) 
 
 export const getExpenses = async (req : express.Request, res : express.Response) => {
 	try {
-		// Get userId from authenticated session (not from URL)
+
 		const currentUserId = _.get(req, 'identity._id') as unknown as string;
 		
 		if (!currentUserId) {
@@ -62,7 +62,7 @@ export const getExpenses = async (req : express.Request, res : express.Response)
 		const options: any = {};
 
 		if(category){
-			// Decode URL encoding and trim whitespace for better matching
+
 			options.category = decodeURIComponent(category as string).trim();
 		}
 
@@ -91,6 +91,134 @@ export const getExpenses = async (req : express.Request, res : express.Response)
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json({ error: 'Retrieving Expenses Failed!!' });
+	}
+}
+
+export const getSingleExpense = async (req : express.Request, res : express.Response) => {
+	try {
+		const currentUserId = _.get(req, 'identity._id') as unknown as string;
+		
+		if (!currentUserId) {
+			return res.status(401).json({ error: 'User not authenticated' });
+		}
+
+		const { expenseId } = req.params;
+
+		if (!expenseId) {
+			return res.status(400).json({ error: 'Expense ID is required' });
+		}
+
+		const expense = await getExpenseById(expenseId);
+
+		if (!expense) {
+			return res.status(404).json({ error: 'Expense not found' });
+		}
+
+		// this checks if the expense belongs to the current user
+		if (expense.userId.toString() !== currentUserId.toString()) {
+			return res.status(403).json({ error: 'Access denied: You can only view your own expenses' });
+		}
+
+		return res.status(200).json({ 
+			message: "Expense retrieved successfully",
+			expense
+		});
+
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json({ error: 'Failed to retrieve expense' });
+	}
+}
+
+export const updateExpense = async (req : express.Request, res : express.Response) => {
+	try {
+		const currentUserId = _.get(req, 'identity._id') as unknown as string;
+		
+		if (!currentUserId) {
+			return res.status(401).json({ error: 'User not authenticated' });
+		}
+
+		const { expenseId } = req.params;
+		const { amount, name, category, notes, date } = req.body;
+
+		if (!expenseId) {
+			return res.status(400).json({ error: 'Expense ID is required' });
+		}
+
+		const existingExpense = await getExpenseById(expenseId);
+
+		if (!existingExpense) {
+			return res.status(404).json({ error: 'Expense not found' });
+		}
+
+		if (existingExpense.userId.toString() !== currentUserId.toString()) {
+			return res.status(403).json({ error: 'Access denied: You can only update your own expenses' });
+		}
+
+		if (amount !== undefined) {
+			if (isNaN(Number(amount)) || Number(amount) <= 0) {
+				return res.status(400).json({ error: "Amount must be a positive number" });
+			}
+		}
+
+		const updateData: Record<string, any> = {};
+		if (amount !== undefined) updateData.amount = amount;
+		if (name !== undefined) updateData.name = name;
+		if (category !== undefined) updateData.category = category;
+		if (notes !== undefined) updateData.notes = notes;
+		if (date !== undefined) updateData.date = date;
+
+		if (Object.keys(updateData).length === 0) {
+			return res.status(400).json({ error: 'No fields to update' });
+		}
+
+		const updatedExpense = await updateExpenseById(expenseId, updateData);
+
+		return res.status(200).json({
+			message: 'Expense updated successfully',
+			expense: updatedExpense
+		});
+
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json({ error: 'Failed to update expense' });
+	}
+}
+
+export const deleteExpense = async (req : express.Request, res : express.Response) => {
+	try {
+		const currentUserId = _.get(req, 'identity._id') as unknown as string;
+		
+		if (!currentUserId) {
+			return res.status(401).json({ error: 'User not authenticated' });
+		}
+
+		const { expenseId } = req.params;
+
+		if (!expenseId) {
+			return res.status(400).json({ error: 'Expense ID is required' });
+		}
+
+		const existingExpense = await getExpenseById(expenseId);
+
+		if (!existingExpense) {
+			return res.status(404).json({ error: 'Expense not found' });
+		}
+
+		if (existingExpense.userId.toString() !== currentUserId.toString()) {
+			return res.status(403).json({ error: 'Access denied: You can only delete your own expenses' });
+		}
+
+		await deleteExpenseById(expenseId);
+
+		return res.status(200).json({
+			message: 'Expense deleted successfully',
+			expenseId: expenseId
+		});
+
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json({ error: 'Failed to delete expense' });
 	}
 }
 

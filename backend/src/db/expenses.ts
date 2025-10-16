@@ -43,6 +43,9 @@ export const ExpenseModel = mongoose.model('Expense', ExpenseSchema);
 
 export const getExpenses = () => ExpenseModel.find().sort({date : -1}).lean(); // for admin
 export const createExpense = (values: Record<string, any>) => new ExpenseModel(values).save().then((expense) => expense.toObject());
+export const getExpenseById = (expenseId: string) => ExpenseModel.findById(expenseId).lean();
+export const updateExpenseById = (expenseId: string, values: Record<string, any>) => ExpenseModel.findByIdAndUpdate(expenseId, values, { new: true }).lean();
+export const deleteExpenseById = (expenseId: string) => ExpenseModel.findByIdAndDelete(expenseId);
 
 export const getExpensesByUser = (userId: string, options: any = {}) => {
   	const query: any = { userId };
