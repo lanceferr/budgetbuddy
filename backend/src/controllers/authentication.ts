@@ -1,6 +1,6 @@
 import express from 'express';
-import { getUserByEmail, createUser, getUserByEmailWithAuth, setResetToken, getUserByResetToken, clearResetToken, updateUserById } from '../db/users.js'
-import { random, authentication } from '../helpers/index.js'
+import { getUserByEmail, createUser, getUserByEmailWithAuth, setResetToken, getUserByResetToken, clearResetToken, updateUserById } from '../db/users.ts'
+import { random, authentication } from '../helpers/index.ts'
 
 const isValidEmail = (email: string): boolean => {
 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

@@ -1,6 +1,6 @@
 import express from 'express';
-import { isAuthenticated } from '../middlewares/index.js'
-import { addExpense, getExpenses, getSingleExpense, updateExpense, deleteExpense } from '../controllers/expenses.js'
+import { isAuthenticated } from '../middlewares/index.ts'
+import { addExpense, getExpenses, getSingleExpense, updateExpense, deleteExpense } from '../controllers/expenses.ts'
 
 export default (router : express.Router) => {
 	router.post('/expenses', isAuthenticated, addExpense);

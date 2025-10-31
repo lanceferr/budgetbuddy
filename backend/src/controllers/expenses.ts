@@ -1,6 +1,6 @@
 import express from 'express';
 import _ from 'lodash';
-import { createExpense, getExpensesByUser, getTotalExpenses, getExpenseById, updateExpenseById, deleteExpenseById} from '../db/expenses.js'
+import { createExpense, getExpensesByUser, getTotalExpenses, getExpenseById, updateExpenseById, deleteExpenseById} from '../db/expenses.ts'
 
 export const addExpense = async (req : express.Request, res : express.Response) => {
 	try {

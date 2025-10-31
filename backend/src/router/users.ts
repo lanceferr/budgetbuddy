@@ -1,7 +1,7 @@
 import express from 'express';
 
-import { getAllUsers, deleteUser, updateUser } from '../controllers/users.js';
-import { isAuthenticated, isOwner } from '../middlewares/index.js';
+import { getAllUsers, deleteUser, updateUser } from '../controllers/users.ts';
+import { isAuthenticated, isOwner } from '../middlewares/index.ts';
 
 export default (router: express.Router) => {
 	router.get('/users', isAuthenticated, getAllUsers);

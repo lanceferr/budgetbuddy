@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { login, register, logout, loginWithShortExpiry, requestPasswordReset, resetPassword } from '../controllers/authentication.js';
+import { login, register, logout, loginWithShortExpiry, requestPasswordReset, resetPassword } from '../controllers/authentication.ts';
 
 export default (router: express.Router) => {
 	router.post('/auth/register', register);

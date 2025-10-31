@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { getUsers, deleteUserById, updateUserById } from '../db/users.js';
+import { getUsers, deleteUserById, updateUserById } from '../db/users.ts';
 
 export const getAllUsers = async (req: express.Request, res: express.Response) => {
 

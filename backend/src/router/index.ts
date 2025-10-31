@@ -1,7 +1,7 @@
 import express from 'express';
-import authentication from './authentication.js';
-import users from './users.js';
-import expenses from './expenses.js'
+import authentication from './authentication.ts';
+import users from './users.ts';
+import expenses from './expenses.ts'
 
 const router = express.Router();
 
