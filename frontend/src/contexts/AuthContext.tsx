@@ -1,6 +1,6 @@
 // Authentication context to manage user state across the app
 
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { authAPI } from '../services/api';
 import type { User, LoginCredentials, RegisterCredentials } from '../types';
@@ -18,7 +18,25 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start as true to check auth on mount
+
+  // Check if user is authenticated on app load
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        // Try to get current user (cookie will be sent automatically)
+        const response = await authAPI.getCurrentUser();
+        setUser(response.user);
+      } catch (error) {
+        // If it fails, user is not logged in (that's okay)
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
 
   const login = async (credentials: LoginCredentials) => {
     setIsLoading(true);

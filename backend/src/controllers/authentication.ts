@@ -160,6 +160,28 @@ export const register = async (req : express.Request, res: express.Response) => 
 
 }
 
+export const getCurrentUser = async (req: express.Request, res: express.Response) => {
+	try {
+		// The user is already attached by isAuthenticated middleware
+		const user = (req as any).identity;
+		
+		if (!user) {
+			return res.status(401).json({ error: 'Not authenticated' });
+		}
+
+		return res.status(200).json({
+			user: {
+				id: user._id,
+				email: user.email,
+				username: user.username
+			}
+		});
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json({ error: 'Failed to get current user' });
+	}
+};
+
 export const logout = async (req: express.Request, res: express.Response) => {
 
 	try {

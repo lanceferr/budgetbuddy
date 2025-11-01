@@ -61,6 +61,10 @@ export const authAPI = {
       method: 'POST',
     }),
 
+  // Check if user is currently authenticated
+  getCurrentUser: () =>
+    apiRequest<AuthResponse>('/auth/me'),
+
   requestPasswordReset: (email: string) =>
     apiRequest('/auth/request-reset', {
       method: 'POST',
