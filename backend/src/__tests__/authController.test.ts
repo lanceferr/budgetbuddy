@@ -68,7 +68,6 @@ describe('login', () => {
     const mockUser = {
       authentication: { salt: 's', password: 'hash' },
       _id: '123',
-      save: jest.fn()
     };
     (getUserByEmailWithAuth as jest.Mock).mockResolvedValue(mockUser);
     (authentication as jest.Mock).mockReturnValue('wrong-hash');
