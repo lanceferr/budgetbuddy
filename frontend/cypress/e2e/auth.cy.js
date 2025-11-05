@@ -43,8 +43,22 @@ describe('Authentication Flow', () => {
 
     cy.contains('Login').click()
     
-    cy.get('input[type="email"]').type('blyat@example.com')
+    cy.get('input[type="email"]').type('bread@example.com')
     cy.get('input[type="password"]').type('wrongpassword')
+    
+    cy.contains('button', 'Login').click()
+    
+    cy.url().should('include', '/login')
+    cy.contains(/error|failed|invalid/i).should('be.visible')
+
+  })
+
+  it('should show error with wrong email', () => {
+
+    cy.contains('Login').click()
+    
+    cy.get('input[type="email"]').type('blyat@example.com')
+    cy.get('input[type="password"]').type('TestPass123!@#')
     
     cy.contains('button', 'Login').click()
     
