@@ -46,6 +46,10 @@ export const login = async (req : express.Request, res: express.Response) => {
 			return res.status(400).json({ error: 'Email and password are required' });
 		}
 
+		if(typeof email !== 'string' || typeof password !== 'string'){
+			return res.status(400).json({ error: 'Invalid credentials' });
+		}
+
 		const user = await getUserByEmailWithAuth(email);
 
 		if(!user || !user.authentication){
