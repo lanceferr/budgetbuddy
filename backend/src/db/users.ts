@@ -76,6 +76,7 @@ export const UserModel = mongoose.model('User',UserSchema);
 
 export const getUsers = () => UserModel.find().lean();
 export const getUserByEmail = (email : string) => UserModel.findOne({email}).lean();
+export const getUserByUsername = (username : string) => UserModel.findOne({username}).lean();
 export const getUserByEmailWithAuth = (email: string) =>
   UserModel.findOne({ email }).select('+authentication.password +authentication.salt');
 

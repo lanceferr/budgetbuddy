@@ -1,5 +1,5 @@
 import express from 'express';
-import { getUserByEmail, createUser, getUserByEmailWithAuth, setResetToken, getUserByResetToken, clearResetToken, updateUserById } from '../db/users.ts'
+import { getUserByEmail, createUser, getUserByEmailWithAuth, setResetToken, getUserByResetToken, clearResetToken, updateUserById, getUserByUsername } from '../db/users.ts'
 import { random, authentication } from '../helpers/index.ts'
 
 const isValidEmail = (email: string): boolean => {
@@ -126,9 +126,14 @@ export const register = async (req : express.Request, res: express.Response) => 
 			return res.status(400).json({ error: 'Username must be between 3 and 30 characters' });
 		}
 
-		const existingUser = await getUserByEmail(email);
-		if(existingUser) {
+		const existingUserByUsername = await getUserByUsername(username);
+		if(existingUserByUsername) {
 			return res.status(400).json({ error: 'User already exists' });
+		}
+
+		const existingUserByEmail = await getUserByEmail(email);
+		if(existingUserByEmail) {
+			return res.status(400).json({ error: 'E-mail already registered' });
 		}
 
 		const salt = random();
