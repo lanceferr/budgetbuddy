@@ -74,9 +74,10 @@ const TransactionsTab = () => {
       });
       
       fetchExpenses();
-    } catch (err) {
-      alert('Failed to save expense');
-      console.error(err);
+    } catch (err: any) {
+      const errorMessage = err?.message || 'Failed to save expense';
+      alert(`Failed to save expense: ${errorMessage}`);
+      console.error('Error saving expense:', err);
     }
   };
 

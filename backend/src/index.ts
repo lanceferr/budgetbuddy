@@ -1,6 +1,5 @@
 import express from 'express';
 import http from 'http';
-import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
 import cors from 'cors';
@@ -12,13 +11,14 @@ import router from './router/index.ts';
 const app = express();
 
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || "http://localhost:3000", // frontend URL
+  origin: process.env.CORS_ORIGIN || "http://localhost:5173", // frontend URL
   credentials: true
 }));
 
 app.use(compression());
 app.use(cookieParser());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 const server = http.createServer(app);
 

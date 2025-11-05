@@ -43,7 +43,7 @@ export const addExpense = async (req : express.Request, res : express.Response) 
 	    }).end();
 
 	} catch(error){
-		console.log(error);
+		console.log('Error in addExpense:', error);
 		return res.status(500).json({ error: 'Expense Creation failed' });
 	}
 }

@@ -140,6 +140,26 @@ export const register = async (req : express.Request, res: express.Response) => 
 
 		})
 		
+		const sessionSalt = random();
+		const sessionToken = authentication(sessionSalt, user._id.toString());
+		
+		const sessionExpiry = new Date();
+		sessionExpiry.setDate(sessionExpiry.getDate() + 7);
+
+		await updateUserById(user._id.toString(), {
+			'authentication.sessionToken': sessionToken,
+			'authentication.sessionExpiry': sessionExpiry
+		});
+
+		res.cookie('AUTH', sessionToken, {
+			domain: 'localhost', 
+			path: "/",
+			httpOnly: true,
+			secure: process.env.NODE_ENV === 'production',
+			sameSite: 'strict',
+			maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+		});
+		
 		return res.status(201).json({
 
 			message: 'Registration successful',
