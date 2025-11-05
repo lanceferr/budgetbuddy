@@ -380,3 +380,5 @@ export const resetPassword = async (req: express.Request, res: express.Response)
 		return res.status(500).json({ error: 'Failed to reset password' });
 	}
 };
+
+export { validatePassword };
