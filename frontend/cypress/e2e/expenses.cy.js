@@ -41,6 +41,7 @@ describe('Expenses Management', () => {
     })
     
     cy.url().should('include', '/dashboard')
+    
   })
 
   it('should create expense', () => {
