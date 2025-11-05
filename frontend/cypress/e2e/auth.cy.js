@@ -57,7 +57,7 @@ describe('Authentication Flow', () => {
 
     cy.contains('Login').click()
     
-    cy.get('input[type="email"]').type('blyat@example.com')
+    cy.get('input[type="email"]').type('bro@example.com')
     cy.get('input[type="password"]').type('TestPass123!@#')
     
     cy.contains('button', 'Login').click()

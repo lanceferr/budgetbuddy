@@ -35,6 +35,38 @@ describe('Security Tests', () => {
 
   })
 
+  it('should reject already registered username', () => {
+
+    cy.contains('Get Started').click()
+    
+    cy.get('input[type="text"]').type('Bread')
+    cy.get('input[type="email"]').type('newemail@example.com')
+    cy.get('input[type="password"]').type('StrongPass123!@#')
+    
+    cy.contains('button', 'Create Account').click()
+    
+    cy.url().should('include', '/register')
+
+    cy.get('body').should('contain.text', 'User already exists')
+
+  })
+
+  it('should reject already registered email', () => {
+
+    cy.contains('Get Started').click()
+    
+    cy.get('input[type="text"]').type('newuser')
+    cy.get('input[type="email"]').type('bread@example.com')
+    cy.get('input[type="password"]').type('StrongPass123!@#')
+    
+    cy.contains('button', 'Create Account').click()
+    
+    cy.url().should('include', '/register')
+
+    cy.get('body').should('contain.text', 'E-mail already registered')
+
+  })
+
   it('should redirect to login when accessing dashboard without auth', () => {
 
     cy.visit('http://localhost:5173/dashboard')
@@ -44,7 +76,7 @@ describe('Security Tests', () => {
 
   })
 
-  it('should logout and redirect to home', () => {
+  it('should logout and redirect to log in', () => {
 
     cy.contains('Login').click()
     cy.get('input[type="email"]').type('bread@example.com')
