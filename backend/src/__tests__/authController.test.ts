@@ -1,5 +1,6 @@
 
 import {
+  validatePassword,
   login,
   register,
   logout,
@@ -43,6 +44,56 @@ const mockRequest = (body = {}) => ({ body });
 beforeEach(() => {
   jest.clearAllMocks();
 });
+
+// --------------------
+// validate Password
+// --------------------
+
+describe ('validate password', () =>{
+  it('should return 8 character minimum for the password', async () => {
+    let password: string = 'hello'; // 5 letters
+    const result = validatePassword(password);
+    expect(result.isValid).toBe(false);
+    expect(result.errors).toContain('Password must be at least 8 characters long');
+  })
+
+  it('at least 1 uppercase letter', async () => {
+    let password: string = 'helloooo'; // 8 letters all lowercase
+    const result = validatePassword(password);
+    expect(result.isValid).toBe(false);
+    expect(result.errors).toContain('Password must contain at least one uppercase letter');
+  })
+
+  it('at least 1 lowercase character', async () => {
+    let password: string = 'HELLOOOO'; // 8 letters, all uppercase
+    const result = validatePassword(password);
+    expect(result.isValid).toBe(false);
+    expect(result.errors).toContain('Password must contain at least one lowercase letter');
+  })
+
+  it('at least 1 number', async () => {
+    let password: string = 'Helloooo'; //8 letters, 1 uppercase, the rest is lowercase
+    const result = validatePassword(password);
+    expect(result.isValid).toBe(false);
+    expect(result.errors).toContain('Password must contain at least one number');
+  })
+
+    it('at least 1 special character', async () => {
+    let password: string = 'Hellooo1'; // 8 letters, 1 uppercase, the rest is lowercase
+    const result = validatePassword(password);
+    expect(result.isValid).toBe(false);
+    expect(result.errors).toContain('Password must contain at least one special character (!@#$%^&*(),.?":{}|<>)');
+  })
+
+  it('valid password', async () => {
+    let password: string = 'Helloo@1'; // 9 characters, 1 uppercase, the rest is lowercase, 1 number, 1 special character
+    const result = validatePassword(password);
+    expect(result.isValid).toBe(true);
+    expect(result.errors).toHaveLength(0);
+  })
+
+})
+
 
 // --------------------
 // LOGIN TESTS
