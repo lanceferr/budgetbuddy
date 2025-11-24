@@ -82,7 +82,47 @@ const BudgetsTab = () => {
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '400px 1fr', gap: '24px' }}>
-      <div style={{ background: 'white', borderRadius: '12px', padding: '24px', border: '1px solid #e5e7eb' }}>
+      <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+      `}</style>
+      
+      <div style={{ 
+        background: 'white', 
+        borderRadius: '12px', 
+        padding: '24px', 
+        border: '1px solid #e5e7eb',
+        animation: 'slideIn 0.6s ease-out',
+        transition: 'transform 0.3s, box-shadow 0.3s',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+      }}>
         <h3 style={{ marginBottom: '16px' }}>{editingId ? 'Edit Budget' : 'Create Budget'}</h3>
         {error && (
           <div style={{ padding: '12px', background: '#fee2e2', color: '#dc2626', borderRadius: '6px', marginBottom: '12px', fontSize: '14px' }}>
@@ -118,7 +158,23 @@ const BudgetsTab = () => {
         </form>
       </div>
 
-      <div style={{ background: 'white', borderRadius: '12px', padding: '24px', border: '1px solid #e5e7eb' }}>
+      <div style={{ 
+        background: 'white', 
+        borderRadius: '12px', 
+        padding: '24px', 
+        border: '1px solid #e5e7eb',
+        animation: 'fadeIn 0.6s ease-out 0.2s both',
+        transition: 'transform 0.3s, box-shadow 0.3s',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+      }}>
         <h3 style={{ marginBottom: '12px' }}>Your Budgets</h3>
         {loading ? (
           <div>Loading budgets...</div>

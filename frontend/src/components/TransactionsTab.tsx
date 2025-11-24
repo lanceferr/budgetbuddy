@@ -164,6 +164,30 @@ const TransactionsTab = () => {
 
   return (
     <div>
+      <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+      `}</style>
+      
       {/* Filter Panel */}
       <div style={{
         background: 'white',
@@ -172,6 +196,16 @@ const TransactionsTab = () => {
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
         border: '1px solid #e5e7eb',
         marginBottom: '24px',
+        animation: 'fadeIn 0.5s ease-out',
+        transition: 'transform 0.3s, box-shadow 0.3s',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
       }}>
         <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#1f2937', marginBottom: '16px' }}>
           🔍 Filter Transactions
@@ -266,6 +300,16 @@ const TransactionsTab = () => {
         height: 'fit-content',
         position: 'sticky',
         top: '100px',
+        animation: 'slideIn 0.6s ease-out 0.1s both',
+        transition: 'transform 0.3s, box-shadow 0.3s',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
       }}>
         <h3 style={{ 
           fontSize: '20px', 
@@ -416,6 +460,16 @@ const TransactionsTab = () => {
         padding: '24px',
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
         border: '1px solid #e5e7eb',
+        animation: 'fadeIn 0.6s ease-out 0.2s both',
+        transition: 'transform 0.3s, box-shadow 0.3s',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
       }}>
         <div style={{
           display: 'flex',
