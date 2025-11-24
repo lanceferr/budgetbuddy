@@ -81,4 +81,27 @@ export const getTotalExpenses = async (userId : string, options: any = {}) => {
   	const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
     
     return total;
-} 
+}
+
+// Aggregate spending by category for a given period (optimized for dashboard)
+export const getSpendingByCategory = async (userId: string, startDate?: Date, endDate?: Date) => {
+  const query: any = { userId };
+  if (startDate) query.date = { ...query.date, $gte: startDate };
+  if (endDate) query.date = { ...query.date, $lte: endDate };
+
+  const result = await ExpenseModel.aggregate([
+    { $match: query },
+    { $group: { _id: '$category', total: { $sum: '$amount' } } },
+    { $sort: { total: -1 } }
+  ]);
+
+  return result.map(r => ({ category: r._id, total: r.total }));
+};
+
+// Get spending totals for multiple filters at once (optimized for budget list)
+export const getBulkTotals = async (userId: string, filters: Array<{ category?: string; startDate?: Date }>) => {
+  const results = await Promise.all(
+    filters.map(f => getTotalExpenses(userId, f))
+  );
+  return results;
+}; 

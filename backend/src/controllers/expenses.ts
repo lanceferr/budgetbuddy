@@ -1,6 +1,7 @@
 import express from 'express';
 import _ from 'lodash';
-import { createExpense, getExpensesByUser, getTotalExpenses, getExpenseById, updateExpenseById, deleteExpenseById} from '../db/expenses.ts'
+import { createExpense, getExpensesByUser, getTotalExpenses, getExpenseById, updateExpenseById, deleteExpenseById, getSpendingByCategory} from '../db/expenses.ts'
+import { getBudgetsByUser } from '../db/budgets.ts';
 
 export const addExpense = async (req : express.Request, res : express.Response) => {
 	try {
@@ -219,6 +220,74 @@ export const deleteExpense = async (req : express.Request, res : express.Respons
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json({ error: 'Failed to delete expense' });
+	}
+}
+
+export const getDashboardStats = async (req : express.Request, res : express.Response) => {
+	try {
+		const currentUserId = _.get(req, 'identity._id') as unknown as string;
+		if (!currentUserId) return res.status(401).json({ error: 'User not authenticated' });
+
+		const now = new Date();
+		const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+		
+		// Get spending by category for this month
+		const categoryData = await getSpendingByCategory(currentUserId, thisMonthStart);
+
+		// Get weekly trend (last 4 weeks)
+		const weeks = [];
+		for (let i = 3; i >= 0; i--) {
+			const weekEnd = new Date(now);
+			weekEnd.setDate(now.getDate() - (i * 7));
+			const weekStart = new Date(weekEnd);
+			weekStart.setDate(weekEnd.getDate() - 6);
+			
+			const total = await getTotalExpenses(currentUserId, { startDate: weekStart, endDate: weekEnd });
+			weeks.push({ week: `Week ${4 - i}`, total, startDate: weekStart, endDate: weekEnd });
+		}
+
+		// Get budgets with current spending
+		const budgets = await getBudgetsByUser(currentUserId);
+		const budgetComparisons = await Promise.all(budgets.map(async (b: any) => {
+			const periodStart = b.period === 'monthly' ? thisMonthStart : (() => {
+				const day = now.getDay();
+				const diff = (day + 6) % 7;
+				const monday = new Date(now);
+				monday.setDate(now.getDate() - diff);
+				monday.setHours(0, 0, 0, 0);
+				return monday;
+			})();
+
+			const spent = await getTotalExpenses(currentUserId, { 
+				category: b.category || undefined, 
+				startDate: periodStart 
+			});
+
+			return {
+				category: b.category || 'Overall',
+				budget: b.amount,
+				spent,
+				period: b.period
+			};
+		}));
+
+		// Get top expenses this month
+		const topExpenses = await getExpensesByUser(currentUserId, { startDate: thisMonthStart });
+		const sorted = topExpenses.sort((a, b) => b.amount - a.amount).slice(0, 5);
+
+		return res.status(200).json({
+			message: 'Dashboard stats retrieved',
+			stats: {
+				categoryData,
+				weeklyTrend: weeks,
+				budgetComparisons,
+				topExpenses: sorted
+			}
+		});
+
+	} catch (error) {
+		console.log('Error in getDashboardStats:', error);
+		return res.status(500).json({ error: 'Failed to retrieve dashboard stats' });
 	}
 }
 

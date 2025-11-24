@@ -3,11 +3,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import DashboardTab from '../components/DashboardTab';
 import TransactionsTab from '../components/TransactionsTab';
+import BudgetsTab from '../components/BudgetsTab';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'transactions' | 'income' | 'savings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'transactions' | 'budgets' | 'income' | 'savings'>('dashboard');
 
   const handleLogout = async () => {
     try {
@@ -75,6 +76,12 @@ export default function Dashboard() {
               style={navButtonStyle(activeTab === 'transactions')}
             >
               Transactions
+            </button>
+            <button
+              onClick={() => setActiveTab('budgets')}
+              style={navButtonStyle(activeTab === 'budgets')}
+            >
+              Budgets
             </button>
           </div>
 
@@ -147,6 +154,7 @@ export default function Dashboard() {
       }}>
         {activeTab === 'dashboard' && <DashboardTab onAddTransaction={() => setActiveTab('transactions')} />}
         {activeTab === 'transactions' && <TransactionsTab />}
+        {activeTab === 'budgets' && <BudgetsTab />}
         {activeTab === 'income' && <div>Income tab - Coming soon</div>}
         {activeTab === 'savings' && <div>Savings tab - Coming soon</div>}
       </div>
