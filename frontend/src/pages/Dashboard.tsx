@@ -152,7 +152,7 @@ export default function Dashboard() {
         margin: '0 auto',
         padding: '32px 24px',
       }}>
-        {activeTab === 'dashboard' && <DashboardTab onAddTransaction={() => setActiveTab('transactions')} />}
+        {activeTab === 'dashboard' && <DashboardTab onAddTransaction={() => setActiveTab('transactions')} onNavigateToBudgets={() => setActiveTab('budgets')} />}
         {activeTab === 'transactions' && <TransactionsTab />}
         {activeTab === 'budgets' && <BudgetsTab />}
         {activeTab === 'income' && <div>Income tab - Coming soon</div>}
