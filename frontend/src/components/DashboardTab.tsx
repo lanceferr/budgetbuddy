@@ -104,26 +104,6 @@ const DashboardTab = ({ onAddTransaction, onNavigateToBudgets }: DashboardTabPro
     URL.revokeObjectURL(url);
   };
 
-  // Get daily spending for calendar heatmap
-  const getDailySpending = () => {
-    const dailyMap: { [key: string]: number } = {};
-    expenses.forEach(exp => {
-      const dateKey = new Date(exp.date).toISOString().split('T')[0];
-      dailyMap[dateKey] = (dailyMap[dateKey] || 0) + exp.amount;
-    });
-    return dailyMap;
-  };
-
-  const getColorForAmount = (amount: number) => {
-    if (amount === 0) return '#f3f4f6';
-    if (amount < 500) return '#d1fae5';
-    if (amount < 1000) return '#6ee7b7';
-    if (amount < 2000) return '#34d399';
-    if (amount < 3000) return '#10b981';
-    if (amount < 5000) return '#059669';
-    return '#047857';
-  };
-
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '60px 0', color: '#6b7280' }}>
@@ -398,7 +378,7 @@ const DashboardTab = ({ onAddTransaction, onNavigateToBudgets }: DashboardTabPro
                   fill="#8884d8"
                   dataKey="value"
                 >
-                  {categoryChartData.map((entry: any, index: number) => (
+                  {categoryChartData.map((_entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
@@ -1039,4 +1019,3 @@ const BudgetHistoryView = ({ budgets, expenses }: { budgets: Budget[], expenses:
 };
 
 export default DashboardTab;
-

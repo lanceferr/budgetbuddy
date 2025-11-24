@@ -7,7 +7,6 @@ import type {
   ExpensesResponse,
   Expense,
   ExpenseFilters,
-  Budget,
   BudgetsResponse,
 } from '../types';
 

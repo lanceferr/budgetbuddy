@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { budgetsAPI, expensesAPI } from '../services/api';
+import { budgetsAPI } from '../services/api';
 import type { Budget } from '../types';
 
 const categories = ['Food', 'Transport', 'Entertainment', 'Shopping', 'Bills', 'Health', 'Other'];
