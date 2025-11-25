@@ -7,6 +7,7 @@ import type {
   ExpensesResponse,
   Expense,
   ExpenseFilters,
+  BudgetsResponse,
 } from '../types';
 
 const API_BASE_URL = 'http://localhost:8080';
@@ -110,6 +111,33 @@ export const expensesAPI = {
 
   deleteExpense: (id: string) =>
     apiRequest(`/expenses/${id}`, {
+      method: 'DELETE',
+    }),
+
+  getDashboardStats: () =>
+    apiRequest<any>('/dashboard/stats'),
+};
+
+// Budgets API
+export const budgetsAPI = {
+  getBudgets: () => apiRequest<BudgetsResponse>('/budgets'),
+
+  getBudget: (id: string) => apiRequest<{ budget: any }>(`/budgets/${id}`),
+
+  createBudget: (payload: { amount: number; period: 'weekly' | 'monthly'; category?: string }) =>
+    apiRequest<{ message: string; budget: any }>('/budgets', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  updateBudget: (id: string, updates: Partial<{ amount: number; period: 'weekly' | 'monthly'; category?: string }>) =>
+    apiRequest<{ message: string; budget: any }>(`/budgets/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updates),
+    }),
+
+  deleteBudget: (id: string) =>
+    apiRequest(`/budgets/${id}`, {
       method: 'DELETE',
     }),
 };

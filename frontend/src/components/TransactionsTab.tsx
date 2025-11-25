@@ -8,6 +8,14 @@ const TransactionsTab = () => {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
 
+  // Filter state
+  const [filters, setFilters] = useState({
+    category: '',
+    startDate: '',
+    endDate: '',
+    sort: '',
+  });
+
   // Form state
   const [formData, setFormData] = useState({
     amount: '',
@@ -19,12 +27,18 @@ const TransactionsTab = () => {
 
   useEffect(() => {
     fetchExpenses();
-  }, []);
+  }, [filters]);
 
   const fetchExpenses = async () => {
     try {
       setLoading(true);
-      const response = await expensesAPI.getExpenses();
+      const filterParams: any = {};
+      if (filters.category) filterParams.category = filters.category;
+      if (filters.startDate) filterParams.startDate = filters.startDate;
+      if (filters.endDate) filterParams.endDate = filters.endDate;
+      if (filters.sort) filterParams.sort = filters.sort;
+      
+      const response = await expensesAPI.getExpenses(filterParams);
       setExpenses(response.expenses);
       setTotal(response.total);
     } catch (err) {
@@ -139,12 +153,143 @@ const TransactionsTab = () => {
 
   const categories = ['Food', 'Transport', 'Entertainment', 'Shopping', 'Bills', 'Health', 'Other'];
 
+  const handleClearFilters = () => {
+    setFilters({
+      category: '',
+      startDate: '',
+      endDate: '',
+      sort: '',
+    });
+  };
+
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: '400px 1fr',
-      gap: '24px',
-    }}>
+    <div>
+      <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+      `}</style>
+      
+      {/* Filter Panel */}
+      <div style={{
+        background: 'white',
+        borderRadius: '12px',
+        padding: '20px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+        border: '1px solid #e5e7eb',
+        marginBottom: '24px',
+        animation: 'fadeIn 0.5s ease-out',
+        transition: 'transform 0.3s, box-shadow 0.3s',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+      }}>
+        <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#1f2937', marginBottom: '16px' }}>
+          🔍 Filter Transactions
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', alignItems: 'end' }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500', color: '#374151' }}>
+              Category
+            </label>
+            <select
+              value={filters.category}
+              onChange={(e) => setFilters({ ...filters, category: e.target.value })}
+              style={{ width: '100%', padding: '8px', fontSize: '14px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+            >
+              <option value="">All Categories</option>
+              {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+            </select>
+          </div>
+          
+          <div>
+            <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500', color: '#374151' }}>
+              Start Date
+            </label>
+            <input
+              type="date"
+              value={filters.startDate}
+              onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
+              style={{ width: '100%', padding: '8px', fontSize: '14px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+            />
+          </div>
+          
+          <div>
+            <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500', color: '#374151' }}>
+              End Date
+            </label>
+            <input
+              type="date"
+              value={filters.endDate}
+              onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
+              style={{ width: '100%', padding: '8px', fontSize: '14px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+            />
+          </div>
+          
+          <div>
+            <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500', color: '#374151' }}>
+              Sort By
+            </label>
+            <select
+              value={filters.sort}
+              onChange={(e) => setFilters({ ...filters, sort: e.target.value })}
+              style={{ width: '100%', padding: '8px', fontSize: '14px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+            >
+              <option value="">Date (Newest)</option>
+              <option value='{"date":1}'>Date (Oldest)</option>
+              <option value='{"amount":-1}'>Amount (High to Low)</option>
+              <option value='{"amount":1}'>Amount (Low to High)</option>
+            </select>
+          </div>
+        </div>
+        
+        {(filters.category || filters.startDate || filters.endDate || filters.sort) && (
+          <button
+            onClick={handleClearFilters}
+            style={{
+              marginTop: '12px',
+              padding: '8px 16px',
+              fontSize: '13px',
+              background: '#6b7280',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+            }}
+          >
+            Clear Filters
+          </button>
+        )}
+      </div>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '400px 1fr',
+        gap: '24px',
+      }}>
       {/* Left Side - Add/Edit Expense Form */}
       <div style={{
         background: 'white',
@@ -155,6 +300,16 @@ const TransactionsTab = () => {
         height: 'fit-content',
         position: 'sticky',
         top: '100px',
+        animation: 'slideIn 0.6s ease-out 0.1s both',
+        transition: 'transform 0.3s, box-shadow 0.3s',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
       }}>
         <h3 style={{ 
           fontSize: '20px', 
@@ -305,6 +460,16 @@ const TransactionsTab = () => {
         padding: '24px',
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
         border: '1px solid #e5e7eb',
+        animation: 'fadeIn 0.6s ease-out 0.2s both',
+        transition: 'transform 0.3s, box-shadow 0.3s',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
       }}>
         <div style={{
           display: 'flex',
@@ -419,6 +584,7 @@ const TransactionsTab = () => {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 };

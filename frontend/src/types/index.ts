@@ -29,6 +29,22 @@ export interface ExpensesResponse {
   total: number;
 }
 
+export interface Budget {
+  _id: string;
+  userId: string;
+  amount: number;
+  period: 'weekly' | 'monthly';
+  category?: string;
+  currentSpent?: number;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+}
+
+export interface BudgetsResponse {
+  message: string;
+  budgets: Budget[];
+}
+
 export interface ApiError {
   error: string;
 }
