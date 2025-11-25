@@ -66,3 +66,30 @@ export interface ExpenseFilters {
   category?: string;
   sort?: string;
 }
+
+export interface RecurringExpense {
+  _id: string;
+  userId: string;
+  amount: number;
+  name: string;
+  category: string;
+  frequency: 'minutely' | 'daily' | 'weekly' | 'monthly';
+  startDate: Date | string;
+  endDate?: Date | string | null;
+  lastGenerated?: Date | string | null;
+  notes?: string;
+  isActive: boolean;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+}
+
+export interface RecurringExpensesResponse {
+  message: string;
+  recurringExpenses: RecurringExpense[];
+}
+
+export interface CreateRecurringExpenseResponse {
+  message: string;
+  recurringExpense: RecurringExpense;
+  expenseGenerated?: boolean;
+}

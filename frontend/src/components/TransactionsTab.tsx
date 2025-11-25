@@ -504,15 +504,30 @@ const TransactionsTab = () => {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {expenses.map((expense) => (
-              <div key={expense._id} style={{
-                padding: '16px',
-                background: '#f9fafb',
-                borderRadius: '8px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}>
+            {expenses.map((expense) => {
+              const expenseDate = new Date(expense.date);
+              const exactTime = expenseDate.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit',
+                hour12: true 
+              });
+              
+              return (
+              <div 
+                key={expense._id} 
+                style={{
+                  padding: '16px',
+                  background: '#f9fafb',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  position: 'relative',
+                  cursor: 'pointer',
+                }}
+                title={`Created at: ${expenseDate.toLocaleDateString()} ${exactTime}`}
+              >
                 <div style={{ flex: 1 }}>
                   <div style={{ 
                     fontWeight: '600', 
@@ -526,7 +541,7 @@ const TransactionsTab = () => {
                     fontSize: '13px', 
                     color: '#6b7280',
                   }}>
-                    {expense.category} • {new Date(expense.date).toLocaleDateString()}
+                    {expense.category} • {expenseDate.toLocaleDateString()}
                     {expense.notes && ` • ${expense.notes}`}
                   </div>
                 </div>
@@ -580,7 +595,8 @@ const TransactionsTab = () => {
                   </div>
                 </div>
               </div>
-            ))}
+            )
+            })}
           </div>
         )}
       </div>

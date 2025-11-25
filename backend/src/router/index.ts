@@ -3,6 +3,7 @@ import authentication from './authentication.ts';
 import users from './users.ts';
 import expenses from './expenses.ts'
 import budgets from './budgets.ts';
+import recurringExpenses from './recurringExpenses.ts';
 
 const router = express.Router();
 
@@ -11,6 +12,7 @@ export default (): express.Router => {
 	users(router);
 	expenses(router);
 	budgets(router);
+	recurringExpenses(router);
 
 	return router;
 };
