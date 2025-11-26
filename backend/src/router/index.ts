@@ -14,6 +14,7 @@ export default (): express.Router => {
 	expenses(router);
 	budgets(router);
 	recurringExpenses(router);
+	income(router);
 
 	return router;
 };
