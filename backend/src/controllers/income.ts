@@ -91,6 +91,50 @@ export const getSingleIncome = async (req: express.Request, res: express.Respons
 
 export const updateIncome = async (req: express.Request, res: express.Response) => {
   // To be implemented
+
+  try{
+    const currentUserId = _.get(req, 'identity._id') as unknown as string;
+    if (!currentUserId) return res.status(401).json({ error: 'User not authenticated' });
+
+    const { incomeId } = req.params;
+    if (!incomeId) return res.status(400).json({ error: 'Income ID is required' });
+
+    const existing = await getIncomeById(incomeId);
+    if (!existing) return res.status(404).json({ error: 'Income not found' });
+    if (existing.userId.toString() !== currentUserId.toString())
+      return res.status(403).json({ error: 'Access denied' });
+
+    const { amount, date, source, notes } = req.body;
+
+    const updates: any = {};
+    if (amount !== undefined) {
+      if (isNaN(Number(amount)) || Number(amount) <= 0)
+        return res.status(400).json({ error: 'Amount must be a positive number' });
+      updates.amount = Number(amount);
+    }
+    if (date !== undefined) {
+      const newDate = new Date(date);
+      if (isNaN(newDate.getTime()))
+        return res.status(400).json({ error: 'Invalid date format' });
+      updates.date = newDate;
+    }
+    if (source !== undefined) {
+      if (source.trim() === '')
+        return res.status(400).json({ error: 'Source cannot be empty' });
+      updates.source = source.trim();
+    }
+    if (notes !== undefined) {
+      updates.notes = notes.trim();
+    }
+
+    const updatedIncome = await updateIncomeById(incomeId, updates);
+    return res.status(200).json({ message: 'Income updated', income: updatedIncome });
+
+  } catch (error) {
+    console.log('Error in updateIncome:', error);
+    return res.status(500).json({ error: 'Failed to update income. Please try again.' });
+  }
+
 };
 
 /**
@@ -99,5 +143,24 @@ export const updateIncome = async (req: express.Request, res: express.Response) 
  * - confirm user owns the entry
  */
 export const deleteIncome = async (req: express.Request, res: express.Response) => {
-  // To be implemented
+  try {
+    const currentUserId = _.get(req, 'identity._id') as unknown as string;
+    if (!currentUserId) return res.status(401).json({ error: 'User not authenticated' });
+
+    const { incomeId } = req.params;
+    if (!incomeId) return res.status(400).json({ error: 'Income ID is required' });
+
+    const existing = await getIncomeById(incomeId);
+    if (!existing) return res.status(404).json({ error: 'Income not found' });
+    
+    if (existing.userId.toString() !== currentUserId.toString())
+      return res.status(403).json({ error: 'Access denied' });
+
+    await deleteIncomeById(incomeId);
+    return res.status(200).json({ message: 'Income deleted', incomeId });
+
+  } catch (error) {
+    console.log('Error in deleteIncome:', error);
+    return res.status(500).json({ error: 'Failed to delete income. Please try again.' });
+  }
 };
