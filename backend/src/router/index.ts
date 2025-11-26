@@ -3,6 +3,7 @@ import authentication from './authentication.ts';
 import users from './users.ts';
 import expenses from './expenses.ts'
 import budgets from './budgets.ts';
+import income from './income.ts';
 
 const router = express.Router();
 
