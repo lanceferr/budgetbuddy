@@ -94,7 +94,6 @@ frontend/.next/
 
 # md
 README.md
-conventional-commits.md
 
 node_modules/
 dist/
