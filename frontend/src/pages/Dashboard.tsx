@@ -4,11 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import DashboardTab from '../components/DashboardTab';
 import TransactionsTab from '../components/TransactionsTab';
 import BudgetsTab from '../components/BudgetsTab';
+import RecurringExpensesTab from '../components/RecurringExpensesTab';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'transactions' | 'budgets' | 'income' | 'savings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'transactions' | 'budgets' | 'recurring' | 'income' | 'savings'>('dashboard');
 
   const handleLogout = async () => {
     try {
@@ -83,6 +84,12 @@ export default function Dashboard() {
             >
               Budgets
             </button>
+            <button
+              onClick={() => setActiveTab('recurring')}
+              style={navButtonStyle(activeTab === 'recurring')}
+            >
+              Recurring
+            </button>
           </div>
 
           {/* User Profile & Logout */}
@@ -155,6 +162,7 @@ export default function Dashboard() {
         {activeTab === 'dashboard' && <DashboardTab onAddTransaction={() => setActiveTab('transactions')} onNavigateToBudgets={() => setActiveTab('budgets')} />}
         {activeTab === 'transactions' && <TransactionsTab />}
         {activeTab === 'budgets' && <BudgetsTab />}
+        {activeTab === 'recurring' && <RecurringExpensesTab />}
         {activeTab === 'income' && <div>Income tab - Coming soon</div>}
         {activeTab === 'savings' && <div>Savings tab - Coming soon</div>}
       </div>

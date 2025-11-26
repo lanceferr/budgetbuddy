@@ -8,6 +8,9 @@ import type {
   Expense,
   ExpenseFilters,
   BudgetsResponse,
+  RecurringExpense,
+  RecurringExpensesResponse,
+  CreateRecurringExpenseResponse,
 } from '../types';
 
 const API_BASE_URL = 'http://localhost:8080';
@@ -155,5 +158,38 @@ export const usersAPI = {
   deleteUser: (id: string) =>
     apiRequest(`/users/${id}`, {
       method: 'DELETE',
+    }),
+};
+
+// Recurring Expenses API
+export const recurringExpensesAPI = {
+  getRecurringExpenses: (includeInactive = false) => {
+    const endpoint = includeInactive ? '/recurring-expenses?includeInactive=true' : '/recurring-expenses';
+    return apiRequest<RecurringExpensesResponse>(endpoint);
+  },
+
+  getRecurringExpense: (id: string) =>
+    apiRequest<{ message: string; recurringExpense: RecurringExpense }>(`/recurring-expenses/${id}`),
+
+  createRecurringExpense: (payload: Omit<RecurringExpense, '_id' | 'userId' | 'isActive' | 'lastGenerated' | 'createdAt' | 'updatedAt'> & { generateImmediately?: boolean }) =>
+    apiRequest<CreateRecurringExpenseResponse>('/recurring-expenses', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  updateRecurringExpense: (id: string, updates: Partial<Omit<RecurringExpense, '_id' | 'userId'>>) =>
+    apiRequest<{ message: string; recurringExpense: RecurringExpense }>(`/recurring-expenses/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updates),
+    }),
+
+  deleteRecurringExpense: (id: string) =>
+    apiRequest<{ message: string; recurringId: string }>(`/recurring-expenses/${id}`, {
+      method: 'DELETE',
+    }),
+
+  toggleRecurringExpense: (id: string) =>
+    apiRequest<{ message: string; recurringExpense: RecurringExpense }>(`/recurring-expenses/${id}/toggle`, {
+      method: 'POST',
     }),
 };

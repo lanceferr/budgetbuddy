@@ -7,6 +7,7 @@ import mongoose from 'mongoose';
 import 'dotenv/config';
 
 import router from './router/index.ts';
+import { startRecurringExpenseScheduler } from './services/recurringExpenseScheduler.ts';
 
 const app = express();
 
@@ -35,6 +36,9 @@ mongoose.connect(MONGO_URL);
 mongoose.connection.on("error", (error: Error) => console.log(error));
 mongoose.connection.once("open", () => {
 	console.log(`Connected to MongoDB at ${MONGO_URL}`);
+	
+	// Start the recurring expense scheduler after DB connection
+	startRecurringExpenseScheduler();
 });
 
 app.use('/', router());

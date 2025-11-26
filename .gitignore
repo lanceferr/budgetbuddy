@@ -94,11 +94,11 @@ frontend/.next/
 
 # md
 README.md
-conventional-commits.md
 
 node_modules/
 dist/
 *.log
+.DS_Store
 .DS_Store
 
 backend/node_modules/
