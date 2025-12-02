@@ -5,6 +5,7 @@ import expenses from './expenses.ts'
 import budgets from './budgets.ts';
 import recurringExpenses from './recurringExpenses.ts';
 import income from './income.ts';
+import savings from './savings.ts';
 
 const router = express.Router();
 
@@ -15,6 +16,6 @@ export default (): express.Router => {
 	budgets(router);
 	recurringExpenses(router);
 	income(router);
-
+	savings(router);
 	return router;
 };
