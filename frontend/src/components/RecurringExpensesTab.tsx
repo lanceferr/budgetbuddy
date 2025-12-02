@@ -20,7 +20,6 @@ const RecurringExpensesTab = () => {
     startDate: new Date().toISOString().split('T')[0],
     endDate: '',
     notes: '',
-    generateImmediately: true, // Default to true for better UX
   });
 
   useEffect(() => {
@@ -76,15 +75,7 @@ const RecurringExpensesTab = () => {
         await recurringExpensesAPI.updateRecurringExpense(editingId, payload);
         setEditingId(null);
       } else {
-        
-        payload.generateImmediately = formData.generateImmediately;
-        const result = await recurringExpensesAPI.createRecurringExpense(payload);
-        
-        // Show success message based on whether expense was generated
-        if (result.expenseGenerated) {
-          setError(null);
-          // Could add a success message here if desired
-        }
+        await recurringExpensesAPI.createRecurringExpense(payload);
       }
 
       setFormData({
@@ -95,7 +86,6 @@ const RecurringExpensesTab = () => {
         startDate: new Date().toISOString().split('T')[0],
         endDate: '',
         notes: '',
-        generateImmediately: true,
       });
       await fetchRecurringExpenses();
     } catch (err: any) {
@@ -115,7 +105,6 @@ const RecurringExpensesTab = () => {
       startDate: new Date(recurring.startDate).toISOString().split('T')[0],
       endDate: recurring.endDate ? new Date(recurring.endDate).toISOString().split('T')[0] : '',
       notes: recurring.notes || '',
-      generateImmediately: false, // Not used when editing
     });
   };
 
@@ -150,7 +139,6 @@ const RecurringExpensesTab = () => {
       startDate: new Date().toISOString().split('T')[0],
       endDate: '',
       notes: '',
-      generateImmediately: true,
     });
   };
 
@@ -187,8 +175,114 @@ const RecurringExpensesTab = () => {
     return next;
   };
 
+  // Get upcoming expenses in next 7 days
+  const getUpcomingExpenses = () => {
+    const now = new Date();
+    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    
+    return recurringExpenses
+      .filter(r => r.isActive)
+      .map(r => ({
+        ...r,
+        nextDate: getNextGenerationDate(r)
+      }))
+      .filter(r => r.nextDate >= now && r.nextDate <= sevenDaysFromNow)
+      .sort((a, b) => a.nextDate.getTime() - b.nextDate.getTime());
+  };
+
+  const getTotalUpcoming = () => {
+    return getUpcomingExpenses().reduce((sum, exp) => sum + exp.amount, 0);
+  };
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '450px 1fr', gap: '24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* Upcoming Expenses Timeline */}
+      {!loading && recurringExpenses.filter(r => r.isActive).length > 0 && (
+        <div style={{
+          background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
+          borderRadius: '12px',
+          padding: '20px',
+          border: '2px solid #fbbf24',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div>
+              <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#92400e', marginBottom: '4px' }}>
+                📅 Upcoming in Next 7 Days
+              </h3>
+              <p style={{ fontSize: '14px', color: '#b45309' }}>
+                {getUpcomingExpenses().length} expense{getUpcomingExpenses().length !== 1 ? 's' : ''} scheduled
+              </p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '12px', color: '#92400e', marginBottom: '4px' }}>Total</div>
+              <div style={{ fontSize: '28px', fontWeight: '700', color: '#b45309' }}>
+                ₱{getTotalUpcoming().toFixed(2)}
+              </div>
+            </div>
+          </div>
+
+          {getUpcomingExpenses().length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {getUpcomingExpenses().map((exp) => {
+                const daysUntil = Math.ceil((exp.nextDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                return (
+                  <div
+                    key={exp._id}
+                    style={{
+                      background: 'white',
+                      padding: '12px 16px',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      border: '1px solid #fbbf24',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '8px',
+                        background: daysUntil === 0 ? '#fee2e2' : '#dbeafe',
+                        color: daysUntil === 0 ? '#991b1b' : '#1e40af',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '11px',
+                        fontWeight: '700',
+                      }}>
+                        <div style={{ fontSize: '16px' }}>{exp.nextDate.getDate()}</div>
+                        <div>{exp.nextDate.toLocaleDateString('en-US', { month: 'short' })}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>{exp.name}</div>
+                        <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                          {exp.category} • {getFrequencyEmoji(exp.frequency)} {exp.frequency}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '16px', fontWeight: '700', color: '#dc2626' }}>
+                        ₱{exp.amount.toFixed(2)}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#6b7280' }}>
+                        {daysUntil === 0 ? 'Today' : daysUntil === 1 ? 'Tomorrow' : `In ${daysUntil} days`}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '20px', color: '#92400e', fontSize: '14px' }}>
+              No expenses scheduled in the next 7 days
+            </div>
+          )}
+        </div>
+      )}
+
+      <div style={{ display: 'grid', gridTemplateColumns: '450px 1fr', gap: '24px' }}>
       <style>{`
         @keyframes fadeIn {
           from {
@@ -399,46 +493,7 @@ const RecurringExpensesTab = () => {
             />
           </div>
 
-          {!editingId && (
-            <div style={{
-              padding: '12px',
-              background: '#f0fdf4',
-              borderRadius: '8px',
-              border: '1px solid #86efac',
-            }}>
-              <label style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-                color: '#065f46',
-              }}>
-                <input
-                  type="checkbox"
-                  checked={formData.generateImmediately}
-                  onChange={(e) => setFormData({ ...formData, generateImmediately: e.target.checked })}
-                  style={{
-                    width: '18px',
-                    height: '18px',
-                    cursor: 'pointer',
-                  }}
-                />
-                <span>⚡ Generate first expense immediately</span>
-              </label>
-              <p style={{
-                fontSize: '12px',
-                color: '#047857',
-                marginTop: '6px',
-                marginLeft: '28px',
-              }}>
-                When checked, the first expense will be created right away instead of waiting for the scheduler
-              </p>
-            </div>
-          )}
-
-          <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
             <button
               type="submit"
               disabled={submitting}
@@ -647,6 +702,7 @@ const RecurringExpensesTab = () => {
             })}
           </div>
         )}
+      </div>
       </div>
     </div>
   );
