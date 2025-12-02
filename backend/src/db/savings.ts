@@ -57,3 +57,10 @@ export const getSavingsGoalsByUser = (userId: string, options: any = {}) => {
     return SavingsModel.find(query).sort(sort).lean();
 };
 
+export const addContributionToSavingsGoal = async (goalId: string, amount: number) => {
+    return SavingsModel.findByIdAndUpdate(
+        goalId,
+        { $inc: { currentAmount: amount } },
+        { new: true }
+    ).lean();
+};
