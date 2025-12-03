@@ -37,6 +37,13 @@ jobs:
             sleep 2
           done
           echo "Backend failed to start" && exit 1
+      # ----------------------
+      # Run Jest tests (backend)
+      # ----------------------
+      
+      - name: Run Jest tests (backend)
+        working-directory: ./backend
+        run: npm test -- --ci --watchAll=false
 
       # ----------------------
       # Frontend setup + start
