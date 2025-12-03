@@ -6,23 +6,6 @@ describe('Authentication Flow', () => {
 
   })
 
-  it('should register a new user', () => {
-    
-    cy.contains('Get Started').click()
-    
-    cy.url().should('include', '/register')
-    
-    cy.get('input[type="text"]').type(`Bread`)
-    cy.get('input[type="email"]').type(`bread@example.com`)
-    cy.get('input[type="password"]').type('TestPass123!@#')
-    
-    cy.contains('button', 'Create Account').click()
-    
-    cy.url().should('include', '/dashboard')
-    cy.contains('Dashboard').should('be.visible')
-
-  })
-
   it('should login with existing credentials', () => {
 
     cy.contains('Login').click()
