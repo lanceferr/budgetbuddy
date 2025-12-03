@@ -50,7 +50,8 @@ describe('Expenses Management', () => {
 
     cy.get('input[type="number"]').type('100')
     cy.get('input[type="text"]').type('Bread')
-    cy.get('select').select('Food')
+    cy.get(':nth-child(3) > select').select('Food')
+
     cy.get('textarea').type('Weekly groceries from the store')
 
     cy.contains('button', 'Add Expense').click()
@@ -64,7 +65,7 @@ describe('Expenses Management', () => {
 
     cy.get('input[type="number"]').clear().type('150')
     cy.get('input[type="text"]').clear().type('Breads')
-    cy.get('select').select('Food')
+    cy.get(':nth-child(3) > select').select('Food')
     cy.get('textarea').clear().type('Weekly groceries from the stores')
 
     cy.contains('button', 'Update Expense').click()
@@ -79,7 +80,7 @@ describe('Expenses Management', () => {
     
     cy.get('input[type="number"]').type('99')
     cy.get('input[type="text"]').type(uniqueName)
-    cy.get('select').select('Food')
+    cy.get(':nth-child(3) > select').select('Food')
     cy.contains('button', 'Add Expense').click()
     
     cy.contains(uniqueName).should('be.visible')
