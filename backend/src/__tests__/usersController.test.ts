@@ -61,12 +61,13 @@ describe('Get All Users', () => {
         expect(res.json).toHaveBeenCalledWith([]);
       });
 
-      it('should return 1 user as the db has only one entry (simulated)', async () => {
-        const req = mockRequest();
-        const res = mockResponse();
+    it('should return 1 user as the db has only one entry (simulated)', async () => {
+      const req = mockRequest();
+      const res = mockResponse();
 
-        const onePersonDB: User[] = [
-          {
+      const now = new Date();
+      const onePersonDB: User[] = [
+        {
             _id: '123abc',
             username: 'tester',
             email: 'test@example.com',
@@ -78,8 +79,8 @@ describe('Get All Users', () => {
               resetPasswordToken: undefined,
               resetPasswordExpiry: undefined
             },
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            createdAt: now,
+            updatedAt: now,
           } as any
         ];
 
@@ -96,12 +97,10 @@ describe('Get All Users', () => {
             resetPasswordToken: undefined,
             resetPasswordExpiry: undefined
           },
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: now,
+          updatedAt: now,
         } as any
-      ];
-
-        (getUsers as jest.Mock).mockResolvedValue(onePersonDB);
+      ];        (getUsers as jest.Mock).mockResolvedValue(onePersonDB);
 
         await getAllUsers(req as any, res as any);
 
