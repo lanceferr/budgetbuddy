@@ -40,7 +40,9 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
 
   useEffect(() => {
     localStorage.setItem('budgetbuddy-theme', isDark ? 'dark' : 'light');
-    document.body.style.background = isDark ? '#1f2937' : '#fafaf9';
+    if (typeof document !== 'undefined' && document.body) {
+      document.body.style.background = isDark ? '#1f2937' : '#fafaf9';
+    }
   }, [isDark]);
 
   const toggleTheme = () => setIsDark(!isDark);
