@@ -20,6 +20,7 @@ const RecurringExpensesTab = () => {
     startDate: new Date().toISOString().split('T')[0],
     endDate: '',
     notes: '',
+    generateImmediately: false,
   });
 
   useEffect(() => {
@@ -65,6 +66,7 @@ const RecurringExpensesTab = () => {
         frequency: formData.frequency,
         startDate: formData.startDate,
         notes: formData.notes,
+        generateImmediately: formData.generateImmediately,
       };
 
       if (formData.endDate) {
@@ -86,6 +88,7 @@ const RecurringExpensesTab = () => {
         startDate: new Date().toISOString().split('T')[0],
         endDate: '',
         notes: '',
+        generateImmediately: false,
       });
       await fetchRecurringExpenses();
     } catch (err: any) {
@@ -105,6 +108,7 @@ const RecurringExpensesTab = () => {
       startDate: new Date(recurring.startDate).toISOString().split('T')[0],
       endDate: recurring.endDate ? new Date(recurring.endDate).toISOString().split('T')[0] : '',
       notes: recurring.notes || '',
+      generateImmediately: false,
     });
   };
 
@@ -139,6 +143,7 @@ const RecurringExpensesTab = () => {
       startDate: new Date().toISOString().split('T')[0],
       endDate: '',
       notes: '',
+      generateImmediately: false,
     });
   };
 
@@ -207,47 +212,6 @@ const RecurringExpensesTab = () => {
     }
 
     return nextDate;
-  };
-
-  // Get upcoming expenses in next 7 days
-  const getUpcomingExpenses = () => {
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-    sevenDaysFromNow.setHours(23, 59, 59, 999);
-    
-    return recurringExpenses
-      .filter(r => r.isActive)
-      .map(r => ({
-        ...r,
-        nextDate: getNextGenerationDate(r)
-      }))
-      .filter(r => r.nextDate >= now && r.nextDate <= sevenDaysFromNow)
-      .sort((a, b) => a.nextDate.getTime() - b.nextDate.getTime());
-  };
-
-  const getTotalUpcoming = () => {
-    return getUpcomingExpenses().reduce((sum, exp) => sum + exp.amount, 0);
-  };
-
-  const getUpcomingExpensesInMonth = () => {
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-    thirtyDaysFromNow.setHours(23, 59, 59, 999);
-
-    return recurringExpenses
-      .filter(r => r.isActive)
-      .map(r => ({
-        ...r,
-        nextDate: getNextGenerationDate(r)
-      }))
-      .filter(r => r.nextDate >= now && r.nextDate <= thirtyDaysFromNow)
-      .sort((a, b) => a.nextDate.getTime() - b.nextDate.getTime());
-  };
-
-  const getTotalUpcomingMonth = () => {
-    return getUpcomingExpensesInMonth().reduce((sum, exp) => sum + exp.amount, 0);
   };
 
   return (
@@ -463,6 +427,28 @@ const RecurringExpensesTab = () => {
               }}
             />
           </div>
+
+          {!editingId && (
+            <div style={{
+              padding: '12px',
+              background: '#f0fdf4',
+              borderRadius: '8px',
+              border: '1px solid #bbf7d0',
+            }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={formData.generateImmediately}
+                  onChange={(e) => setFormData({ ...formData, generateImmediately: e.target.checked })}
+                  style={{ cursor: 'pointer' }}
+                />
+                <span style={{ fontSize: '14px', fontWeight: '500', color: '#15803d' }}>⚡ Generate first expense immediately</span>
+              </label>
+              <p style={{ fontSize: '12px', color: '#16a34a', marginTop: '4px', marginLeft: '24px' }}>
+                Creates an expense right now instead of waiting for the first scheduled date
+              </p>
+            </div>
+          )}
 
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
