@@ -1,0 +1,56 @@
+name: BudgetBuddy Test Suite
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      ##############################################
+      # BACKEND TESTS (Jest)
+      ##############################################
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm install
+
+      - name: Run backend Jest tests
+        working-directory: backend
+        run: npm test -- --ci --coverage
+
+
+      ##############################################
+      # FRONTEND TESTS (Jest)
+      ##############################################
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm install
+
+      - name: Run frontend Jest tests
+        working-directory: frontend
+        run: npm test -- --ci --coverage
+
+
+      ##############################################
+      # CYPRESS E2E TESTS (Vite App)
+      ##############################################
+      - name: Run Cypress tests
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: frontend
+          install-command: npm install
+          build: npm run build
+          start: npm run dev
+          wait-on: http://localhost:5173
