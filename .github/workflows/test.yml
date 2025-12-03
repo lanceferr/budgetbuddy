@@ -51,11 +51,11 @@ jobs:
           CI: false  # important for React
         run: npm run dev &
         
-      - name: Wait for frontend to be ready (3000)
+      - name: Wait for frontend to be ready (5173)
         run: |
-          echo "Waiting for frontend on port 3000..."
+          echo "Waiting for frontend on port 5173..."
           for i in {1..30}; do
-            nc -z localhost 3000 && echo "Frontend is UP!" && exit 0
+            nc -z localhost 5173 && echo "Frontend is UP!" && exit 0
             echo "Still waiting..."
             sleep 2
           done
