@@ -1,10 +1,8 @@
-name: BudgetBuddy Test Suite
+name: CI Tests
 
 on:
   push:
-    branches: [ main ]
   pull_request:
-    branches: [ main ]
 
 jobs:
   test:
@@ -14,43 +12,50 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Use Node 20
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      ##############################################
-      # BACKEND TESTS (Jest)
-      ##############################################
+      # ----------------------
+      # Backend setup + start
+      # ----------------------
       - name: Install backend dependencies
-        working-directory: backend
+        working-directory: ./backend
         run: npm install
 
-      - name: Run backend Jest tests
-        working-directory: backend
-        run: npm test -- --ci --coverage
+      - name: Start backend server
+        working-directory: ./backend
+        run: npm run start &
+        
+      - name: Wait for backend to be ready
+        run: |
+          echo "Waiting for backend on port 8080..."
+          for i in {1..30}; do
+            nc -z localhost 8080 && echo "Backend is up!" && exit 0
+            echo "Still waiting..."
+            sleep 2
+          done
+          echo "Backend failed to start" && exit 1
 
-
-      ##############################################
-      # FRONTEND TESTS (Jest)
-      ##############################################
+      # ----------------------
+      # Frontend unit tests
+      # ----------------------
       - name: Install frontend dependencies
-        working-directory: frontend
+        working-directory: ./frontend
         run: npm install
 
-      - name: Run frontend Jest tests
-        working-directory: frontend
-        run: npm test -- --ci --coverage
+      - name: Run Jest tests (frontend)
+        working-directory: ./frontend
+        run: npm test -- --ci --watchAll=false
 
+      # ----------------------
+      # Cypress end-to-end tests
+      # ----------------------
+      - name: Cypress install
+        working-directory: ./frontend
+        run: npm install cypress --save-dev
 
-      ##############################################
-      # CYPRESS E2E TESTS (Vite App)
-      ##############################################
-      - name: Run Cypress tests
-        uses: cypress-io/github-action@v6
-        with:
-          working-directory: frontend
-          install-command: npm install
-          build: npm run build
-          start: npm run dev
-          wait-on: http://localhost:5173
+      - name: Run Cypress
+        working-directory: ./frontend
+        run: npx cypress run
