@@ -43,7 +43,7 @@ jobs:
       
       - name: Run Jest tests (backend)
         working-directory: ./backend
-        run: npm test -- --ci --watchAll=false
+        run: npm test -- --ci --coverage
 
       # ----------------------
       # Frontend setup + start
@@ -73,7 +73,7 @@ jobs:
       # ----------------------
       - name: Run Jest tests (frontend)
         working-directory: ./frontend
-        run: npm test -- --ci --watchAll=false
+        run: npm test -- --ci --coverage
 
       # ----------------------
       # Cypress tests
