@@ -24,38 +24,53 @@ jobs:
         working-directory: ./backend
         run: npm install
 
-      - name: Start backend server
+      - name: Start backend server (port 8080)
         working-directory: ./backend
         run: npm run start &
         
-      - name: Wait for backend to be ready
+      - name: Wait for backend to be ready (8080)
         run: |
           echo "Waiting for backend on port 8080..."
           for i in {1..30}; do
-            nc -z localhost 8080 && echo "Backend is up!" && exit 0
+            nc -z localhost 8080 && echo "Backend is UP!" && exit 0
             echo "Still waiting..."
             sleep 2
           done
           echo "Backend failed to start" && exit 1
 
       # ----------------------
-      # Frontend unit tests
+      # Frontend setup + start
       # ----------------------
       - name: Install frontend dependencies
         working-directory: ./frontend
         run: npm install
 
+      - name: Start frontend server (port 3000)
+        working-directory: ./frontend
+        env:
+          CI: false  # important for React
+        run: npm run dev &
+        
+      - name: Wait for frontend to be ready (3000)
+        run: |
+          echo "Waiting for frontend on port 3000..."
+          for i in {1..30}; do
+            nc -z localhost 3000 && echo "Frontend is UP!" && exit 0
+            echo "Still waiting..."
+            sleep 2
+          done
+          echo "Frontend failed to start" && exit 1
+
+      # ----------------------
+      # Run Jest tests
+      # ----------------------
       - name: Run Jest tests (frontend)
         working-directory: ./frontend
         run: npm test -- --ci --watchAll=false
 
       # ----------------------
-      # Cypress end-to-end tests
+      # Cypress tests
       # ----------------------
-      - name: Cypress install
-        working-directory: ./frontend
-        run: npm install cypress --save-dev
-
-      - name: Run Cypress
+      - name: Run Cypress tests
         working-directory: ./frontend
         run: npx cypress run
