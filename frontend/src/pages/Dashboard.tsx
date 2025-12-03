@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import DashboardTab from '../components/DashboardTab';
 import TransactionsTab from '../components/TransactionsTab';
 import BudgetsTab from '../components/BudgetsTab';
 import RecurringExpensesTab from '../components/RecurringExpensesTab';
+import IncomeTab from '../components/IncomeTab';
+import SavingsTab from '../components/SavingsTab';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
+  const { isDark, toggleTheme, theme } = useTheme();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'transactions' | 'budgets' | 'recurring' | 'income' | 'savings'>('dashboard');
 
@@ -25,7 +29,7 @@ export default function Dashboard() {
     fontSize: '15px',
     fontWeight: '500',
     background: isActive ? '#10b981' : 'transparent',
-    color: isActive ? 'white' : '#374151',
+    color: isActive ? 'white' : theme.text,
     border: 'none',
     borderRadius: '8px',
     cursor: 'pointer',
@@ -34,11 +38,11 @@ export default function Dashboard() {
   });
 
   return (
-    <div style={{ minHeight: '100vh', background: '#fafaf9' }}>
+    <div style={{ minHeight: '100vh', background: theme.background }}>
       {/* Top Navigation Bar */}
       <nav style={{
-        background: 'white',
-        borderBottom: '1px solid #e5e7eb',
+        background: theme.surface,
+        borderBottom: `1px solid ${theme.border}`,
         padding: '16px 0',
         position: 'sticky',
         top: 0,
@@ -90,6 +94,18 @@ export default function Dashboard() {
             >
               Recurring
             </button>
+            <button
+              onClick={() => setActiveTab('income')}
+              style={navButtonStyle(activeTab === 'income')}
+            >
+              Income
+            </button>
+            <button
+              onClick={() => setActiveTab('savings')}
+              style={navButtonStyle(activeTab === 'savings')}
+            >
+              Savings
+            </button>
           </div>
 
           {/* User Profile & Logout */}
@@ -119,12 +135,34 @@ export default function Dashboard() {
               </div>
               <span style={{
                 fontSize: '14px',
-                color: '#374151',
+                color: theme.text,
                 fontWeight: '500',
               }}>
                 {user?.username || 'User'}
               </span>
             </div>
+            <button
+              onClick={toggleTheme}
+              style={{
+                padding: '8px 12px',
+                fontSize: '20px',
+                background: theme.surface,
+                color: theme.text,
+                border: `1px solid ${theme.border}`,
+                borderRadius: '8px',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = theme.border;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = theme.surface;
+              }}
+              title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {isDark ? '☀️' : '🌙'}
+            </button>
             <button
               onClick={handleLogout}
               style={{
@@ -163,8 +201,8 @@ export default function Dashboard() {
         {activeTab === 'transactions' && <TransactionsTab />}
         {activeTab === 'budgets' && <BudgetsTab />}
         {activeTab === 'recurring' && <RecurringExpensesTab />}
-        {activeTab === 'income' && <div>Income tab - Coming soon</div>}
-        {activeTab === 'savings' && <div>Savings tab - Coming soon</div>}
+        {activeTab === 'income' && <IncomeTab />}
+        {activeTab === 'savings' && <SavingsTab />}
       </div>
     </div>
   );

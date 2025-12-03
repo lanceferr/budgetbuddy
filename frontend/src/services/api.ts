@@ -11,6 +11,10 @@ import type {
   RecurringExpense,
   RecurringExpensesResponse,
   CreateRecurringExpenseResponse,
+  Income,
+  IncomeResponse,
+  SavingsGoal,
+  SavingsGoalsResponse,
 } from '../types';
 
 const API_BASE_URL = 'http://localhost:8080';
@@ -191,5 +195,71 @@ export const recurringExpensesAPI = {
   toggleRecurringExpense: (id: string) =>
     apiRequest<{ message: string; recurringExpense: RecurringExpense }>(`/recurring-expenses/${id}/toggle`, {
       method: 'POST',
+    }),
+};
+
+// Income API
+export const incomeAPI = {
+  getIncomes: () => apiRequest<IncomeResponse>('/income'),
+
+  getIncome: (id: string) =>
+    apiRequest<{ message: string; income: Income }>(`/income/${id}`),
+
+  createIncome: (payload: Omit<Income, '_id' | 'userId' | 'createdAt' | 'updatedAt'>) =>
+    apiRequest<{ message: string; income: Income }>('/income', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  updateIncome: (id: string, updates: Partial<Omit<Income, '_id' | 'userId'>>) =>
+    apiRequest<{ message: string; income: Income }>(`/income/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updates),
+    }),
+
+  deleteIncome: (id: string) =>
+    apiRequest<{ message: string; incomeId: string }>(`/income/${id}`, {
+      method: 'DELETE',
+    }),
+};
+
+// Savings Goals API
+export const savingsGoalsAPI = {
+  getSavingsGoals: (filters?: { startDate?: string; endDate?: string; sort?: string }) => {
+    const params = new URLSearchParams();
+    if (filters?.startDate) params.append('startDate', filters.startDate);
+    if (filters?.endDate) params.append('endDate', filters.endDate);
+    if (filters?.sort) params.append('sort', filters.sort);
+
+    const queryString = params.toString();
+    const endpoint = queryString ? `/savings-goals?${queryString}` : '/savings-goals';
+
+    return apiRequest<SavingsGoalsResponse>(endpoint);
+  },
+
+  getSavingsGoal: (id: string) =>
+    apiRequest<{ message: string; savingsGoal: SavingsGoal }>(`/savings-goals/${id}`),
+
+  createSavingsGoal: (payload: Omit<SavingsGoal, '_id' | 'userId' | 'currentAmount' | 'createdAt' | 'updatedAt'>) =>
+    apiRequest<{ message: string; savingsGoal: SavingsGoal }>('/savings-goals', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  updateSavingsGoal: (id: string, updates: Partial<Omit<SavingsGoal, '_id' | 'userId' | 'currentAmount'>>) =>
+    apiRequest<{ message: string; savingsGoal: SavingsGoal }>(`/savings-goals/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updates),
+    }),
+
+  deleteSavingsGoal: (id: string) =>
+    apiRequest<{ message: string }>(`/savings-goals/${id}`, {
+      method: 'DELETE',
+    }),
+
+  addContribution: (id: string, amount: number) =>
+    apiRequest<{ message: string; savingsGoal: SavingsGoal & { progress: number } }>(`/savings-goals/${id}/contribute`, {
+      method: 'POST',
+      body: JSON.stringify({ amount }),
     }),
 };

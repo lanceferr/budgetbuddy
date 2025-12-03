@@ -93,3 +93,36 @@ export interface CreateRecurringExpenseResponse {
   recurringExpense: RecurringExpense;
   expenseGenerated?: boolean;
 }
+
+export interface Income {
+  _id: string;
+  userId: string;
+  amount: number;
+  date: Date | string;
+  source: string;
+  notes?: string;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+}
+
+export interface IncomeResponse {
+  message: string;
+  incomes: Income[];
+}
+
+export interface SavingsGoal {
+  _id: string;
+  userId: string;
+  goalName: string;
+  targetAmount: number;
+  currentAmount: number;
+  targetDate: Date | string;
+  notes?: string;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+}
+
+export interface SavingsGoalsResponse {
+  message: string;
+  savingsGoals: SavingsGoal[];
+}
