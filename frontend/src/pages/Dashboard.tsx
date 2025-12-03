@@ -197,7 +197,16 @@ export default function Dashboard() {
         margin: '0 auto',
         padding: '32px 24px',
       }}>
-        {activeTab === 'dashboard' && <DashboardTab onAddTransaction={() => setActiveTab('transactions')} onNavigateToBudgets={() => setActiveTab('budgets')} />}
+        {activeTab === 'dashboard' && (
+          <DashboardTab 
+            onAddTransaction={() => setActiveTab('transactions')} 
+            onNavigateToBudgets={() => setActiveTab('budgets')}
+            onNavigateToIncome={() => setActiveTab('income')}
+            onNavigateToSavings={() => setActiveTab('savings')}
+            onNavigateToRecurring={() => setActiveTab('recurring')}
+            onNavigateToTransactions={() => setActiveTab('transactions')}
+          />
+        )}
         {activeTab === 'transactions' && <TransactionsTab />}
         {activeTab === 'budgets' && <BudgetsTab />}
         {activeTab === 'recurring' && <RecurringExpensesTab />}

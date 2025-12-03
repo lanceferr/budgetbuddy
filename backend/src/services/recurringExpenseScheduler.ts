@@ -19,7 +19,15 @@ const getNextOccurrence = (lastDate: Date, frequency: string): Date => {
       next.setDate(next.getDate() + 7);
       break;
     case 'monthly':
+      // For monthly, we need to preserve the day of the month
+      // If last date was Dec 3, next should be Jan 3 (not Jan 1)
+      const originalDay = next.getDate();
       next.setMonth(next.getMonth() + 1);
+      // Handle edge case where target month has fewer days (e.g., Jan 31 -> Feb 28)
+      if (next.getDate() !== originalDay) {
+        // Set to last day of previous month if day doesn't exist
+        next.setDate(0);
+      }
       break;
   }
   

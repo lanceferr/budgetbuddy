@@ -153,32 +153,68 @@ const RecurringExpensesTab = () => {
   };
 
   const getNextGenerationDate = (recurring: RecurringExpense) => {
-    if (!recurring.lastGenerated) {
-      return new Date(recurring.startDate);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0); // Start of today
+    
+    // Determine the base date to calculate from
+    let baseDate: Date;
+    if (recurring.lastGenerated) {
+      baseDate = new Date(recurring.lastGenerated);
+    } else {
+      baseDate = new Date(recurring.startDate);
+    }
+    
+    // Normalize baseDate to start of day for comparison
+    baseDate.setHours(0, 0, 0, 0);
+    
+    // Calculate the next occurrence
+    let nextDate = new Date(baseDate);
+    
+    // If lastGenerated exists, move to the next occurrence
+    if (recurring.lastGenerated) {
+      switch (recurring.frequency) {
+        case 'minutely':
+          nextDate.setMinutes(nextDate.getMinutes() + 1);
+          break;
+        case 'daily':
+          nextDate.setDate(nextDate.getDate() + 1);
+          break;
+        case 'weekly':
+          nextDate.setDate(nextDate.getDate() + 7);
+          break;
+        case 'monthly':
+          nextDate.setMonth(nextDate.getMonth() + 1);
+          break;
+      }
+    }
+    
+    // Keep advancing until we get a date that's today or in the future
+    while (nextDate < now) {
+      switch (recurring.frequency) {
+        case 'minutely':
+          nextDate.setMinutes(nextDate.getMinutes() + 1);
+          break;
+        case 'daily':
+          nextDate.setDate(nextDate.getDate() + 1);
+          break;
+        case 'weekly':
+          nextDate.setDate(nextDate.getDate() + 7);
+          break;
+        case 'monthly':
+          nextDate.setMonth(nextDate.getMonth() + 1);
+          break;
+      }
     }
 
-    const last = new Date(recurring.lastGenerated);
-    const next = new Date(last);
-
-    switch (recurring.frequency) {
-      case 'daily':
-        next.setDate(next.getDate() + 1);
-        break;
-      case 'weekly':
-        next.setDate(next.getDate() + 7);
-        break;
-      case 'monthly':
-        next.setMonth(next.getMonth() + 1);
-        break;
-    }
-
-    return next;
+    return nextDate;
   };
 
   // Get upcoming expenses in next 7 days
   const getUpcomingExpenses = () => {
     const now = new Date();
+    now.setHours(0, 0, 0, 0);
     const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    sevenDaysFromNow.setHours(23, 59, 59, 999);
     
     return recurringExpenses
       .filter(r => r.isActive)
@@ -194,93 +230,28 @@ const RecurringExpensesTab = () => {
     return getUpcomingExpenses().reduce((sum, exp) => sum + exp.amount, 0);
   };
 
+  const getUpcomingExpensesInMonth = () => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    thirtyDaysFromNow.setHours(23, 59, 59, 999);
+
+    return recurringExpenses
+      .filter(r => r.isActive)
+      .map(r => ({
+        ...r,
+        nextDate: getNextGenerationDate(r)
+      }))
+      .filter(r => r.nextDate >= now && r.nextDate <= thirtyDaysFromNow)
+      .sort((a, b) => a.nextDate.getTime() - b.nextDate.getTime());
+  };
+
+  const getTotalUpcomingMonth = () => {
+    return getUpcomingExpensesInMonth().reduce((sum, exp) => sum + exp.amount, 0);
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Upcoming Expenses Timeline */}
-      {!loading && recurringExpenses.filter(r => r.isActive).length > 0 && (
-        <div style={{
-          background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
-          borderRadius: '12px',
-          padding: '20px',
-          border: '2px solid #fbbf24',
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <div>
-              <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#92400e', marginBottom: '4px' }}>
-                📅 Upcoming in Next 7 Days
-              </h3>
-              <p style={{ fontSize: '14px', color: '#b45309' }}>
-                {getUpcomingExpenses().length} expense{getUpcomingExpenses().length !== 1 ? 's' : ''} scheduled
-              </p>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '12px', color: '#92400e', marginBottom: '4px' }}>Total</div>
-              <div style={{ fontSize: '28px', fontWeight: '700', color: '#b45309' }}>
-                ₱{getTotalUpcoming().toFixed(2)}
-              </div>
-            </div>
-          </div>
-
-          {getUpcomingExpenses().length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {getUpcomingExpenses().map((exp) => {
-                const daysUntil = Math.ceil((exp.nextDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                return (
-                  <div
-                    key={exp._id}
-                    style={{
-                      background: 'white',
-                      padding: '12px 16px',
-                      borderRadius: '8px',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      border: '1px solid #fbbf24',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '8px',
-                        background: daysUntil === 0 ? '#fee2e2' : '#dbeafe',
-                        color: daysUntil === 0 ? '#991b1b' : '#1e40af',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '11px',
-                        fontWeight: '700',
-                      }}>
-                        <div style={{ fontSize: '16px' }}>{exp.nextDate.getDate()}</div>
-                        <div>{exp.nextDate.toLocaleDateString('en-US', { month: 'short' })}</div>
-                      </div>
-                      <div>
-                        <div style={{ fontWeight: '600', color: '#1f2937', fontSize: '14px' }}>{exp.name}</div>
-                        <div style={{ fontSize: '12px', color: '#6b7280' }}>
-                          {exp.category} • {getFrequencyEmoji(exp.frequency)} {exp.frequency}
-                        </div>
-                      </div>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '16px', fontWeight: '700', color: '#dc2626' }}>
-                        ₱{exp.amount.toFixed(2)}
-                      </div>
-                      <div style={{ fontSize: '11px', color: '#6b7280' }}>
-                        {daysUntil === 0 ? 'Today' : daysUntil === 1 ? 'Tomorrow' : `In ${daysUntil} days`}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div style={{ textAlign: 'center', padding: '20px', color: '#92400e', fontSize: '14px' }}>
-              No expenses scheduled in the next 7 days
-            </div>
-          )}
-        </div>
-      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '450px 1fr', gap: '24px' }}>
       <style>{`

@@ -1,18 +1,25 @@
 import { useState, useEffect } from 'react';
-import { expensesAPI, budgetsAPI } from '../services/api';
-import type { Expense, Budget } from '../types';
-import { PieChart, Pie, Cell, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { expensesAPI, budgetsAPI, incomeAPI, savingsGoalsAPI, recurringExpensesAPI } from '../services/api';
+import type { Expense, Budget, Income, SavingsGoal, RecurringExpense } from '../types';
+import { PieChart, Pie, Cell, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
 
 interface DashboardTabProps {
   onAddTransaction: () => void;
   onNavigateToBudgets: () => void;
+  onNavigateToIncome: () => void;
+  onNavigateToSavings: () => void;
+  onNavigateToRecurring: () => void;
+  onNavigateToTransactions: () => void;
 }
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'];
 
-const DashboardTab = ({ onAddTransaction, onNavigateToBudgets }: DashboardTabProps) => {
+const DashboardTab = ({ onAddTransaction, onNavigateToBudgets, onNavigateToIncome, onNavigateToSavings, onNavigateToRecurring, onNavigateToTransactions }: DashboardTabProps) => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [incomes, setIncomes] = useState<Income[]>([]);
+  const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([]);
+  const [recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>([]);
   const [dashboardStats, setDashboardStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showCalendar, setShowCalendar] = useState(false);
@@ -25,14 +32,20 @@ const DashboardTab = ({ onAddTransaction, onNavigateToBudgets }: DashboardTabPro
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [expensesRes, budgetsRes, statsRes] = await Promise.all([
+      const [expensesRes, budgetsRes, statsRes, incomesRes, savingsRes, recurringRes] = await Promise.all([
         expensesAPI.getExpenses(),
         budgetsAPI.getBudgets(),
         expensesAPI.getDashboardStats(),
+        incomeAPI.getIncomes(),
+        savingsGoalsAPI.getSavingsGoals(),
+        recurringExpensesAPI.getRecurringExpenses(),
       ]);
       setExpenses(expensesRes.expenses);
       setBudgets(budgetsRes.budgets || []);
       setDashboardStats(statsRes.stats);
+      setIncomes(incomesRes.incomes || []);
+      setSavingsGoals(savingsRes.savingsGoals || []);
+      setRecurringExpenses(recurringRes.recurringExpenses || []);
     } catch (err) {
       console.error('Failed to load dashboard:', err);
     } finally {
@@ -49,6 +62,17 @@ const DashboardTab = ({ onAddTransaction, onNavigateToBudgets }: DashboardTabPro
     new Date(exp.date) >= thisMonth
   );
   const monthlyExpensesTotal = monthlyExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+
+  const monthlyIncomes = incomes.filter(inc => 
+    new Date(inc.date) >= thisMonth
+  );
+  const monthlyIncomesTotal = monthlyIncomes.reduce((sum, inc) => sum + inc.amount, 0);
+
+  const disposableIncome = monthlyIncomesTotal - monthlyExpensesTotal;
+
+  const totalSaved = savingsGoals.reduce((sum, goal) => sum + goal.currentAmount, 0);
+  const totalSavingsTarget = savingsGoals.reduce((sum, goal) => sum + goal.targetAmount, 0);
+  const savingsProgress = totalSavingsTarget > 0 ? Math.round((totalSaved / totalSavingsTarget) * 100) : 0;
 
   // Prepare chart data
   const categoryChartData = dashboardStats?.categoryData?.map((item: any) => ({
@@ -147,41 +171,41 @@ const DashboardTab = ({ onAddTransaction, onNavigateToBudgets }: DashboardTabPro
         }
       `}</style>
       
-      {/* Overview Cards */}
+      {/* Overview Cards - Top Row (2 Wide Cards) */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
+        gridTemplateColumns: 'repeat(2, 1fr)',
         gap: '24px',
-        marginBottom: '32px',
+        marginBottom: '24px',
         animation: 'fadeIn 0.5s ease-out',
       }}>
-        {/* Total Income This Month */}
+        {/* Total Income This Month - Wide Card */}
         <div style={{
           ...statCardStyle,
-          background: 'linear-gradient(135deg, #eff6ff, #dbeafe)',
-          borderLeft: '4px solid #3b82f6',
+          background: 'linear-gradient(135deg, #e0f2fe, #bae6fd)',
+          borderLeft: '4px solid #0284c7',
           transition: 'transform 0.3s, box-shadow 0.3s',
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = 'translateY(-4px)';
-          e.currentTarget.style.boxShadow = '0 8px 16px rgba(59, 130, 246, 0.2)';
+          e.currentTarget.style.boxShadow = '0 8px 16px rgba(2, 132, 199, 0.2)';
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.transform = 'translateY(0)';
           e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
         }}>
-          <div style={{ fontSize: '14px', color: '#1e40af', fontWeight: '600' }}>
+          <div style={{ fontSize: '14px', color: '#075985', fontWeight: '600' }}>
             💵 Total Income
           </div>
-          <div style={{ fontSize: '36px', fontWeight: '800', color: '#3b82f6' }}>
-            ₱0.00
+          <div style={{ fontSize: '40px', fontWeight: '800', color: '#0284c7' }}>
+            ₱{monthlyIncomesTotal.toFixed(2)}
           </div>
-          <div style={{ fontSize: '12px', color: '#60a5fa' }}>
-            This Month
+          <div style={{ fontSize: '12px', color: '#0891b2' }}>
+            This Month • {monthlyIncomes.length} {monthlyIncomes.length === 1 ? 'transaction' : 'transactions'}
           </div>
         </div>
 
-        {/* Total Expenses This Month */}
+        {/* Total Expenses This Month - Wide Card */}
         <div style={{
           ...statCardStyle,
           background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
@@ -199,15 +223,76 @@ const DashboardTab = ({ onAddTransaction, onNavigateToBudgets }: DashboardTabPro
           <div style={{ fontSize: '14px', color: '#065f46', fontWeight: '600' }}>
             💸 Total Expenses
           </div>
-          <div style={{ fontSize: '36px', fontWeight: '800', color: '#10b981' }}>
+          <div style={{ fontSize: '40px', fontWeight: '800', color: '#10b981' }}>
             ₱{monthlyExpensesTotal.toFixed(2)}
           </div>
           <div style={{ fontSize: '12px', color: '#34d399' }}>
-            This Month
+            This Month • {monthlyExpenses.length} {monthlyExpenses.length === 1 ? 'transaction' : 'transactions'}
+          </div>
+        </div>
+      </div>
+
+      {/* Overview Cards - Bottom Row (4 Cards) */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: '24px',
+        marginBottom: '32px',
+        animation: 'fadeIn 0.5s ease-out 0.1s both',
+      }}>
+        {/* Disposable Income */}
+        <div style={{
+          ...statCardStyle,
+          background: 'linear-gradient(135deg, #fef3c7, #fde047)',
+          borderLeft: '4px solid #eab308',
+          transition: 'transform 0.3s, box-shadow 0.3s',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-4px)';
+          e.currentTarget.style.boxShadow = '0 8px 16px rgba(234, 179, 8, 0.2)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+        }}>
+          <div style={{ fontSize: '14px', color: '#854d0e', fontWeight: '600' }}>
+            💰 Disposable
+          </div>
+          <div style={{ fontSize: '36px', fontWeight: '800', color: disposableIncome >= 0 ? '#ca8a04' : '#ef4444' }}>
+            ₱{Math.abs(disposableIncome).toFixed(2)}
+          </div>
+          <div style={{ fontSize: '12px', color: '#a16207' }}>
+            {disposableIncome >= 0 ? 'Available' : 'Overspent'}
           </div>
         </div>
 
-        {/* Disposable Income */}
+        {/* Active Budgets */}
+        <div style={{
+          ...statCardStyle,
+          background: 'linear-gradient(135deg, #e0e7ff, #c7d2fe)',
+          borderLeft: '4px solid #6366f1',
+          transition: 'transform 0.3s, box-shadow 0.3s',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-4px)';
+          e.currentTarget.style.boxShadow = '0 8px 16px rgba(99, 102, 241, 0.2)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+        }}>
+          <div style={{ fontSize: '14px', color: '#3730a3', fontWeight: '600' }}>
+            🎯 Active Budgets
+          </div>
+          <div style={{ fontSize: '36px', fontWeight: '800', color: '#6366f1' }}>
+            {budgets.length}
+          </div>
+          <div style={{ fontSize: '12px', color: '#818cf8' }}>
+            {budgets.filter(b => b.currentSpent && b.currentSpent >= b.amount * 0.9).length} near/exceeded
+          </div>
+        </div>
+
+        {/* Savings Goals */}
         <div style={{
           ...statCardStyle,
           background: 'linear-gradient(135deg, #faf5ff, #f3e8ff)',
@@ -223,39 +308,39 @@ const DashboardTab = ({ onAddTransaction, onNavigateToBudgets }: DashboardTabPro
           e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
         }}>
           <div style={{ fontSize: '14px', color: '#6b21a8', fontWeight: '600' }}>
-            💰 Disposable
+            🎯 Savings Goals
           </div>
           <div style={{ fontSize: '36px', fontWeight: '800', color: '#8b5cf6' }}>
-            ₱0.00
+            {savingsGoals.length}
           </div>
           <div style={{ fontSize: '12px', color: '#a78bfa' }}>
-            Available to Spend
+            {savingsProgress}% progress
           </div>
         </div>
 
-        {/* Active Budgets */}
+        {/* Recurring Expenses */}
         <div style={{
           ...statCardStyle,
-          background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
-          borderLeft: '4px solid #f59e0b',
+          background: 'linear-gradient(135deg, #ffedd5, #fed7aa)',
+          borderLeft: '4px solid #f97316',
           transition: 'transform 0.3s, box-shadow 0.3s',
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = 'translateY(-4px)';
-          e.currentTarget.style.boxShadow = '0 8px 16px rgba(245, 158, 11, 0.2)';
+          e.currentTarget.style.boxShadow = '0 8px 16px rgba(249, 115, 22, 0.2)';
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.transform = 'translateY(0)';
           e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
         }}>
-          <div style={{ fontSize: '14px', color: '#92400e', fontWeight: '600' }}>
-            🎯 Active Budgets
+          <div style={{ fontSize: '14px', color: '#9a3412', fontWeight: '600' }}>
+            🔁 Recurring
           </div>
-          <div style={{ fontSize: '36px', fontWeight: '800', color: '#f59e0b' }}>
-            {budgets.length}
+          <div style={{ fontSize: '36px', fontWeight: '800', color: '#f97316' }}>
+            {recurringExpenses.length}
           </div>
-          <div style={{ fontSize: '12px', color: '#d97706' }}>
-            {budgets.filter(b => b.currentSpent && b.currentSpent >= b.amount * 0.9).length} near/exceeded
+          <div style={{ fontSize: '12px', color: '#fb923c' }}>
+            {recurringExpenses.filter(r => r.isActive).length} active
           </div>
         </div>
       </div>
@@ -462,6 +547,127 @@ const DashboardTab = ({ onAddTransaction, onNavigateToBudgets }: DashboardTabPro
         </div>
       )}
 
+      {/* Income vs Expenses - Area Chart */}
+      {(monthlyIncomesTotal > 0 || monthlyExpensesTotal > 0) && (
+        <div style={{ ...cardStyle, marginBottom: '32px', animation: 'fadeIn 0.6s ease-out 0.32s both', transition: 'transform 0.3s, box-shadow 0.3s' }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+          }}>
+          <h3 style={{ 
+            fontSize: '18px', 
+            fontWeight: '600', 
+            color: '#1f2937',
+            marginBottom: '16px',
+          }}>
+            💰 Income vs Expenses Comparison
+          </h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={[
+              { name: 'This Month', Income: monthlyIncomesTotal, Expenses: monthlyExpensesTotal }
+            ]}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip formatter={(value: any) => `₱${value.toFixed(2)}`} />
+              <Legend />
+              <Bar dataKey="Income" fill="#0284c7" />
+              <Bar dataKey="Expenses" fill="#eab308" />
+            </BarChart>
+          </ResponsiveContainer>
+          <div style={{ marginTop: '16px', padding: '12px', background: disposableIncome >= 0 ? '#f0fdf4' : '#fee2e2', borderRadius: '8px' }}>
+            <div style={{ fontSize: '14px', color: disposableIncome >= 0 ? '#065f46' : '#991b1b', fontWeight: '600' }}>
+              {disposableIncome >= 0 ? '✅ Surplus' : '⚠️ Deficit'}: ₱{Math.abs(disposableIncome).toFixed(2)}
+            </div>
+            <div style={{ fontSize: '12px', color: disposableIncome >= 0 ? '#047857' : '#b91c1c', marginTop: '4px' }}>
+              {disposableIncome >= 0 
+                ? 'You are spending less than your income this month!' 
+                : 'Your expenses exceed your income this month.'}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Savings Goals Progress */}
+      {savingsGoals.length > 0 && (
+        <div style={{ ...cardStyle, marginBottom: '32px', animation: 'fadeIn 0.6s ease-out 0.34s both', transition: 'transform 0.3s, box-shadow 0.3s' }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+          }}>
+          <h3 style={{ 
+            fontSize: '18px', 
+            fontWeight: '600', 
+            color: '#1f2937',
+            marginBottom: '16px',
+          }}>
+            🎯 Savings Goals Progress
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {savingsGoals.slice(0, 5).map((goal: SavingsGoal) => {
+              const progress = goal.targetAmount > 0 
+                ? Math.min(100, (goal.currentAmount / goal.targetAmount) * 100) 
+                : 0;
+              const remaining = Math.max(0, goal.targetAmount - goal.currentAmount);
+              
+              return (
+                <div key={goal._id} style={{
+                  padding: '16px',
+                  background: '#f9fafb',
+                  borderRadius: '8px',
+                  border: '1px solid #e5e7eb',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <div style={{ fontWeight: '600', color: '#1f2937', fontSize: '15px' }}>
+                      {goal.goalName}
+                    </div>
+                    <div style={{ fontSize: '14px', fontWeight: '700', color: '#8b5cf6' }}>
+                      {progress.toFixed(0)}%
+                    </div>
+                  </div>
+                  <div style={{
+                    width: '100%',
+                    height: '8px',
+                    background: '#e5e7eb',
+                    borderRadius: '4px',
+                    overflow: 'hidden',
+                    marginBottom: '8px',
+                  }}>
+                    <div style={{
+                      width: `${progress}%`,
+                      height: '100%',
+                      background: progress >= 100 
+                        ? 'linear-gradient(90deg, #10b981, #059669)' 
+                        : progress >= 75 
+                        ? 'linear-gradient(90deg, #8b5cf6, #7c3aed)' 
+                        : 'linear-gradient(90deg, #3b82f6, #2563eb)',
+                      transition: 'width 0.3s ease',
+                    }} />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#6b7280' }}>
+                    <span>₱{goal.currentAmount.toFixed(2)} saved</span>
+                    <span>₱{remaining.toFixed(2)} remaining</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {savingsGoals.length > 5 && (
+            <div style={{ marginTop: '12px', textAlign: 'center', color: '#6b7280', fontSize: '13px' }}>
+              +{savingsGoals.length - 5} more savings {savingsGoals.length - 5 === 1 ? 'goal' : 'goals'}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Top Expenses */}
       {dashboardStats?.topExpenses && dashboardStats.topExpenses.length > 0 && (
         <div style={{ ...cardStyle, marginBottom: '32px', animation: 'fadeIn 0.6s ease-out 0.35s both', transition: 'transform 0.3s, box-shadow 0.3s' }}
@@ -545,6 +751,7 @@ const DashboardTab = ({ onAddTransaction, onNavigateToBudgets }: DashboardTabPro
           gridTemplateColumns: 'repeat(3, 1fr)',
           gap: '12px',
         }}>
+          {/* Row 1 */}
           <button
             onClick={onAddTransaction}
             style={{
@@ -572,10 +779,10 @@ const DashboardTab = ({ onAddTransaction, onNavigateToBudgets }: DashboardTabPro
           </button>
           
           <button
-            onClick={onNavigateToBudgets}
+            onClick={onNavigateToIncome}
             style={{
               padding: '16px 12px',
-              background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+              background: 'linear-gradient(135deg, #0284c7, #0369a1)',
               color: 'white',
               border: 'none',
               borderRadius: '8px',
@@ -583,25 +790,132 @@ const DashboardTab = ({ onAddTransaction, onNavigateToBudgets }: DashboardTabPro
               fontWeight: '600',
               cursor: 'pointer',
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              boxShadow: '0 2px 4px rgba(59, 130, 246, 0.3)',
+              boxShadow: '0 2px 4px rgba(2, 132, 199, 0.3)',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 4px 8px rgba(59, 130, 246, 0.4)';
+              e.currentTarget.style.boxShadow = '0 4px 8px rgba(2, 132, 199, 0.4)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 2px 4px rgba(59, 130, 246, 0.3)';
+              e.currentTarget.style.boxShadow = '0 2px 4px rgba(2, 132, 199, 0.3)';
             }}
           >
-            💰 Create Budget
+            💵 Add Income
           </button>
-          
+
+          <button
+            onClick={onNavigateToBudgets}
+            style={{
+              padding: '16px 12px',
+              background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '13px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              boxShadow: '0 2px 4px rgba(245, 158, 11, 0.3)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 4px 8px rgba(245, 158, 11, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 4px rgba(245, 158, 11, 0.3)';
+            }}
+          >
+            🎯 Create Budget
+          </button>
+
+          {/* Row 2 */}
+          <button
+            onClick={onNavigateToSavings}
+            style={{
+              padding: '16px 12px',
+              background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '13px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              boxShadow: '0 2px 4px rgba(139, 92, 246, 0.3)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 4px 8px rgba(139, 92, 246, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 4px rgba(139, 92, 246, 0.3)';
+            }}
+          >
+            💎 Savings Goal
+          </button>
+
+          <button
+            onClick={onNavigateToRecurring}
+            style={{
+              padding: '16px 12px',
+              background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '13px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              boxShadow: '0 2px 4px rgba(239, 68, 68, 0.3)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 4px 8px rgba(239, 68, 68, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 4px rgba(239, 68, 68, 0.3)';
+            }}
+          >
+            🔁 Recurring
+          </button>
+
+          <button
+            onClick={onNavigateToTransactions}
+            style={{
+              padding: '16px 12px',
+              background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '13px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              boxShadow: '0 2px 4px rgba(99, 102, 241, 0.3)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 4px 8px rgba(99, 102, 241, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 4px rgba(99, 102, 241, 0.3)';
+            }}
+          >
+            📜 Transactions
+          </button>
+
+          {/* Row 3 */}
           <button
             onClick={() => {
               const reportWindow = window.open('', '_blank');
               if (reportWindow) {
                 const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+                const totalIncome = incomes.reduce((sum, inc) => sum + inc.amount, 0);
                 const monthlyTotal = monthlyExpenses.reduce((sum, exp) => sum + exp.amount, 0);
                 const categoryBreakdown = categoryChartData.map(cat => 
                   `<tr><td style="padding:8px;border:1px solid #ddd;">${cat.name}</td><td style="padding:8px;border:1px solid #ddd;">₱${cat.value.toFixed(2)}</td></tr>`
@@ -609,6 +923,13 @@ const DashboardTab = ({ onAddTransaction, onNavigateToBudgets }: DashboardTabPro
                 const budgetRows = budgets.map(b => {
                   const percent = b.currentSpent ? Math.round((b.currentSpent / b.amount) * 100) : 0;
                   return `<tr><td style="padding:8px;border:1px solid #ddd;">${b.category || 'Overall'}</td><td style="padding:8px;border:1px solid #ddd;">${b.period}</td><td style="padding:8px;border:1px solid #ddd;">₱${b.amount.toFixed(2)}</td><td style="padding:8px;border:1px solid #ddd;">₱${(b.currentSpent || 0).toFixed(2)}</td><td style="padding:8px;border:1px solid #ddd;">${percent}%</td></tr>`;
+                }).join('');
+                const incomeRows = incomes.slice(0, 10).map(inc =>
+                  `<tr><td style="padding:8px;border:1px solid #ddd;">${new Date(inc.date).toLocaleDateString()}</td><td style="padding:8px;border:1px solid #ddd;">${inc.source}</td><td style="padding:8px;border:1px solid #ddd;">₱${inc.amount.toFixed(2)}</td><td style="padding:8px;border:1px solid #ddd;">${inc.notes || '-'}</td></tr>`
+                ).join('');
+                const savingsRows = savingsGoals.map(goal => {
+                  const progress = goal.targetAmount > 0 ? ((goal.currentAmount / goal.targetAmount) * 100).toFixed(1) : 0;
+                  return `<tr><td style="padding:8px;border:1px solid #ddd;">${goal.goalName}</td><td style="padding:8px;border:1px solid #ddd;">₱${goal.targetAmount.toFixed(2)}</td><td style="padding:8px;border:1px solid #ddd;">₱${goal.currentAmount.toFixed(2)}</td><td style="padding:8px;border:1px solid #ddd;">${progress}%</td><td style="padding:8px;border:1px solid #ddd;">${goal.targetDate ? new Date(goal.targetDate).toLocaleDateString() : '-'}</td></tr>`;
                 }).join('');
                 
                 reportWindow.document.write(`
@@ -630,6 +951,7 @@ const DashboardTab = ({ onAddTransaction, onNavigateToBudgets }: DashboardTabPro
                         .print-btn { background: #10b981; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; margin-top: 20px; }
                         .print-btn:hover { background: #059669; }
                         @media print { .print-btn { display: none; } }
+                        .highlight { background: ${disposableIncome >= 0 ? '#dcfce7' : '#fee2e2'}; padding: 16px; border-radius: 8px; border-left: 4px solid ${disposableIncome >= 0 ? '#10b981' : '#ef4444'}; }
                       </style>
                     </head>
                     <body>
@@ -640,18 +962,56 @@ const DashboardTab = ({ onAddTransaction, onNavigateToBudgets }: DashboardTabPro
                       
                       <div class="stat-grid">
                         <div class="stat-card">
-                          <div class="stat-label">💸 Total Expenses (All Time)</div>
-                          <div class="stat-value">₱${totalExpenses.toFixed(2)}</div>
+                          <div class="stat-label">💵 Total Income (This Month)</div>
+                          <div class="stat-value" style="color: #0284c7;">₱${monthlyIncomesTotal.toFixed(2)}</div>
                         </div>
                         <div class="stat-card">
-                          <div class="stat-label">📅 This Month's Expenses</div>
-                          <div class="stat-value">₱${monthlyTotal.toFixed(2)}</div>
+                          <div class="stat-label">💸 Total Expenses (This Month)</div>
+                          <div class="stat-value" style="color: #eab308;">₱${monthlyTotal.toFixed(2)}</div>
                         </div>
+                        <div class="stat-card">
+                          <div class="stat-label">💰 Disposable Income</div>
+                          <div class="stat-value" style="color: ${disposableIncome >= 0 ? '#10b981' : '#ef4444'};">₱${Math.abs(disposableIncome).toFixed(2)}</div>
+                          <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">${disposableIncome >= 0 ? 'Surplus' : 'Deficit'}</div>
+                        </div>
+                      </div>
+
+                      <div class="highlight">
+                        <strong>${disposableIncome >= 0 ? '✅ Financial Health: Good' : '⚠️ Financial Health: Attention Needed'}</strong>
+                        <p style="margin: 8px 0 0 0;">${disposableIncome >= 0 ? 'You are spending less than your income this month.' : 'Your expenses exceed your income this month. Consider reviewing your budget.'}</p>
+                      </div>
+
+                      <div class="stat-grid" style="margin-top: 30px;">
                         <div class="stat-card">
                           <div class="stat-label">🎯 Active Budgets</div>
                           <div class="stat-value">${budgets.length}</div>
                         </div>
+                        <div class="stat-card">
+                          <div class="stat-label">💎 Savings Goals</div>
+                          <div class="stat-value">${savingsGoals.length}</div>
+                          <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">${savingsProgress}% total progress</div>
+                        </div>
+                        <div class="stat-card">
+                          <div class="stat-label">🔁 Recurring Expenses</div>
+                          <div class="stat-value">${recurringExpenses.filter(r => r.isActive).length}</div>
+                          <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">of ${recurringExpenses.length} total</div>
+                        </div>
                       </div>
+
+                      ${incomes.length > 0 ? `
+                      <div class="section">
+                        <h2>💵 Recent Income</h2>
+                        <table>
+                          <thead>
+                            <tr><th>Date</th><th>Source</th><th>Amount</th><th>Notes</th></tr>
+                          </thead>
+                          <tbody>
+                            ${incomeRows || '<tr><td colspan="4" style="padding:12px;text-align:center;color:#6b7280;">No income data</td></tr>'}
+                          </tbody>
+                        </table>
+                        <div style="margin-top: 12px; text-align: right; font-weight: 600;">Total Income (All Time): ₱${totalIncome.toFixed(2)}</div>
+                      </div>
+                      ` : ''}
 
                       <div class="section">
                         <h2>📊 Spending by Category</h2>
@@ -676,6 +1036,21 @@ const DashboardTab = ({ onAddTransaction, onNavigateToBudgets }: DashboardTabPro
                             ${budgetRows}
                           </tbody>
                         </table>
+                      </div>
+                      ` : ''}
+
+                      ${savingsGoals.length > 0 ? `
+                      <div class="section">
+                        <h2>🎯 Savings Goals Progress</h2>
+                        <table>
+                          <thead>
+                            <tr><th>Goal Name</th><th>Target</th><th>Current</th><th>Progress</th><th>Target Date</th></tr>
+                          </thead>
+                          <tbody>
+                            ${savingsRows}
+                          </tbody>
+                        </table>
+                        <div style="margin-top: 12px; text-align: right; font-weight: 600;">Total Saved: ₱${totalSaved.toFixed(2)} / ₱${totalSavingsTarget.toFixed(2)}</div>
                       </div>
                       ` : ''}
 
