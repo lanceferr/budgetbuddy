@@ -65,7 +65,6 @@ describe('Get All Users', () => {
       const req = mockRequest();
       const res = mockResponse();
 
-      const now = new Date();
       const onePersonDB: User[] = [
         {
             _id: '123abc',
@@ -79,8 +78,8 @@ describe('Get All Users', () => {
               resetPasswordToken: undefined,
               resetPasswordExpiry: undefined
             },
-            createdAt: now,
-            updatedAt: now,
+            createdAt: new Date(),
+            updatedAt: new Date(),
           } as any
         ];
 
@@ -97,8 +96,8 @@ describe('Get All Users', () => {
             resetPasswordToken: undefined,
             resetPasswordExpiry: undefined
           },
-          createdAt: now,
-          updatedAt: now,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         } as any
       ];        (getUsers as jest.Mock).mockResolvedValue(onePersonDB);
 
