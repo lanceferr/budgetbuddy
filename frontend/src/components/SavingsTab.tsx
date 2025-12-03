@@ -152,66 +152,6 @@ const SavingsTab = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Mini Stats Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
-        <div style={{
-          background: 'linear-gradient(135deg, #10b981, #059669)',
-          borderRadius: '12px',
-          padding: '20px',
-          color: 'white',
-          boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
-        }}>
-          <div style={{ fontSize: '13px', opacity: 0.9, marginBottom: '8px' }}>Total Saved</div>
-          <div style={{ fontSize: '28px', fontWeight: '700' }}>₱{getTotalSaved().toFixed(2)}</div>
-          <div style={{ fontSize: '12px', opacity: 0.8, marginTop: '4px' }}>
-            {getProgress({ currentAmount: getTotalSaved(), targetAmount: getTotalTarget() } as SavingsGoal)}% of total goals
-          </div>
-        </div>
-
-        <div style={{
-          background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-          borderRadius: '12px',
-          padding: '20px',
-          color: 'white',
-          boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
-        }}>
-          <div style={{ fontSize: '13px', opacity: 0.9, marginBottom: '8px' }}>Total Target</div>
-          <div style={{ fontSize: '28px', fontWeight: '700' }}>₱{getTotalTarget().toFixed(2)}</div>
-          <div style={{ fontSize: '12px', opacity: 0.8, marginTop: '4px' }}>
-            ₱{(getTotalTarget() - getTotalSaved()).toFixed(2)} remaining
-          </div>
-        </div>
-
-        <div style={{
-          background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-          borderRadius: '12px',
-          padding: '20px',
-          color: 'white',
-          boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)',
-        }}>
-          <div style={{ fontSize: '13px', opacity: 0.9, marginBottom: '8px' }}>Active Goals</div>
-          <div style={{ fontSize: '28px', fontWeight: '700' }}>{goals.length}</div>
-          <div style={{ fontSize: '12px', opacity: 0.8, marginTop: '4px' }}>
-            {getCompletedGoals()} completed
-          </div>
-        </div>
-
-        <div style={{
-          background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-          borderRadius: '12px',
-          padding: '20px',
-          color: 'white',
-          boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)',
-        }}>
-          <div style={{ fontSize: '13px', opacity: 0.9, marginBottom: '8px' }}>Savings Rate</div>
-          <div style={{ fontSize: '28px', fontWeight: '700' }}>
-            {getTotalTarget() > 0 ? Math.round((getTotalSaved() / getTotalTarget()) * 100) : 0}%
-          </div>
-          <div style={{ fontSize: '12px', opacity: 0.8, marginTop: '4px' }}>Overall progress</div>
-        </div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '400px 1fr', gap: '24px' }}>
       <style>{`
         @keyframes fadeIn {
           from {
@@ -236,6 +176,106 @@ const SavingsTab = () => {
         }
       `}</style>
 
+      {/* Mini Stats Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', animation: 'fadeIn 0.5s ease-out' }}>
+        <div style={{
+          background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
+          borderRadius: '12px',
+          padding: '20px',
+          borderLeft: '4px solid #10b981',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          border: '1px solid #e5e7eb',
+          transition: 'transform 0.3s, box-shadow 0.3s',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-4px)';
+          e.currentTarget.style.boxShadow = '0 8px 16px rgba(16, 185, 129, 0.2)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+        }}>
+          <div style={{ fontSize: '14px', color: '#065f46', fontWeight: '600' }}>Total Saved</div>
+          <div style={{ fontSize: '36px', fontWeight: '800', color: '#10b981' }}>₱{getTotalSaved().toFixed(2)}</div>
+          <div style={{ fontSize: '12px', color: '#34d399' }}>
+            {getProgress({ currentAmount: getTotalSaved(), targetAmount: getTotalTarget() } as SavingsGoal)}% of total goals
+          </div>
+        </div>
+
+        <div style={{
+          background: 'linear-gradient(135deg, #eff6ff, #dbeafe)',
+          borderRadius: '12px',
+          padding: '20px',
+          borderLeft: '4px solid #3b82f6',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          border: '1px solid #e5e7eb',
+          transition: 'transform 0.3s, box-shadow 0.3s',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-4px)';
+          e.currentTarget.style.boxShadow = '0 8px 16px rgba(59, 130, 246, 0.2)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+        }}>
+          <div style={{ fontSize: '14px', color: '#1e40af', fontWeight: '600' }}>Total Target</div>
+          <div style={{ fontSize: '36px', fontWeight: '800', color: '#3b82f6' }}>₱{getTotalTarget().toFixed(2)}</div>
+          <div style={{ fontSize: '12px', color: '#60a5fa' }}>
+            ₱{(getTotalTarget() - getTotalSaved()).toFixed(2)} remaining
+          </div>
+        </div>
+
+        <div style={{
+          background: 'linear-gradient(135deg, #faf5ff, #f3e8ff)',
+          borderRadius: '12px',
+          padding: '20px',
+          borderLeft: '4px solid #8b5cf6',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          border: '1px solid #e5e7eb',
+          transition: 'transform 0.3s, box-shadow 0.3s',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-4px)';
+          e.currentTarget.style.boxShadow = '0 8px 16px rgba(139, 92, 246, 0.2)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+        }}>
+          <div style={{ fontSize: '14px', color: '#6b21a8', fontWeight: '600' }}>Active Goals</div>
+          <div style={{ fontSize: '36px', fontWeight: '800', color: '#8b5cf6' }}>{goals.length}</div>
+          <div style={{ fontSize: '12px', color: '#a78bfa' }}>
+            {getCompletedGoals()} completed
+          </div>
+        </div>
+
+        <div style={{
+          background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
+          borderRadius: '12px',
+          padding: '20px',
+          borderLeft: '4px solid #f59e0b',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          border: '1px solid #e5e7eb',
+          transition: 'transform 0.3s, box-shadow 0.3s',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-4px)';
+          e.currentTarget.style.boxShadow = '0 8px 16px rgba(245, 158, 11, 0.2)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+        }}>
+          <div style={{ fontSize: '14px', color: '#92400e', fontWeight: '600' }}>Savings Rate</div>
+          <div style={{ fontSize: '36px', fontWeight: '800', color: '#f59e0b' }}>
+            {getTotalTarget() > 0 ? Math.round((getTotalSaved() / getTotalTarget()) * 100) : 0}%
+          </div>
+          <div style={{ fontSize: '12px', color: '#d97706' }}>Overall progress</div>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '400px 1fr', gap: '24px' }}>
       {/* Left Side - Form */}
       <div
         style={{

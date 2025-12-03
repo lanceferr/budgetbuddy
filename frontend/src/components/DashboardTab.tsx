@@ -598,7 +598,108 @@ const DashboardTab = ({ onAddTransaction, onNavigateToBudgets }: DashboardTabPro
           </button>
           
           <button
-            onClick={() => alert('Reports feature coming soon!')}
+            onClick={() => {
+              const reportWindow = window.open('', '_blank');
+              if (reportWindow) {
+                const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+                const monthlyTotal = monthlyExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+                const categoryBreakdown = categoryChartData.map(cat => 
+                  `<tr><td style="padding:8px;border:1px solid #ddd;">${cat.name}</td><td style="padding:8px;border:1px solid #ddd;">₱${cat.value.toFixed(2)}</td></tr>`
+                ).join('');
+                const budgetRows = budgets.map(b => {
+                  const percent = b.currentSpent ? Math.round((b.currentSpent / b.amount) * 100) : 0;
+                  return `<tr><td style="padding:8px;border:1px solid #ddd;">${b.category || 'Overall'}</td><td style="padding:8px;border:1px solid #ddd;">${b.period}</td><td style="padding:8px;border:1px solid #ddd;">₱${b.amount.toFixed(2)}</td><td style="padding:8px;border:1px solid #ddd;">₱${(b.currentSpent || 0).toFixed(2)}</td><td style="padding:8px;border:1px solid #ddd;">${percent}%</td></tr>`;
+                }).join('');
+                
+                reportWindow.document.write(`
+                  <html>
+                    <head>
+                      <title>Budget Buddy - Financial Report</title>
+                      <style>
+                        body { font-family: Arial, sans-serif; padding: 40px; background: #f9fafb; }
+                        .header { background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; padding: 30px; border-radius: 12px; margin-bottom: 30px; }
+                        .section { background: white; padding: 24px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+                        h1 { margin: 0; font-size: 32px; }
+                        h2 { color: #1f2937; font-size: 20px; margin-top: 0; }
+                        table { width: 100%; border-collapse: collapse; }
+                        th { background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #ddd; font-weight: 600; }
+                        .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 30px; }
+                        .stat-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+                        .stat-label { font-size: 14px; color: #6b7280; margin-bottom: 8px; }
+                        .stat-value { font-size: 28px; font-weight: bold; color: #1f2937; }
+                        .print-btn { background: #10b981; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; margin-top: 20px; }
+                        .print-btn:hover { background: #059669; }
+                        @media print { .print-btn { display: none; } }
+                      </style>
+                    </head>
+                    <body>
+                      <div class="header">
+                        <h1>📊 Financial Report</h1>
+                        <p style="margin: 8px 0 0 0; opacity: 0.9;">Generated on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                      </div>
+                      
+                      <div class="stat-grid">
+                        <div class="stat-card">
+                          <div class="stat-label">💸 Total Expenses (All Time)</div>
+                          <div class="stat-value">₱${totalExpenses.toFixed(2)}</div>
+                        </div>
+                        <div class="stat-card">
+                          <div class="stat-label">📅 This Month's Expenses</div>
+                          <div class="stat-value">₱${monthlyTotal.toFixed(2)}</div>
+                        </div>
+                        <div class="stat-card">
+                          <div class="stat-label">🎯 Active Budgets</div>
+                          <div class="stat-value">${budgets.length}</div>
+                        </div>
+                      </div>
+
+                      <div class="section">
+                        <h2>📊 Spending by Category</h2>
+                        <table>
+                          <thead>
+                            <tr><th>Category</th><th>Total Amount</th></tr>
+                          </thead>
+                          <tbody>
+                            ${categoryBreakdown || '<tr><td colspan="2" style="padding:12px;text-align:center;color:#6b7280;">No data available</td></tr>'}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      ${budgets.length > 0 ? `
+                      <div class="section">
+                        <h2>💰 Budget Performance</h2>
+                        <table>
+                          <thead>
+                            <tr><th>Category</th><th>Period</th><th>Budget</th><th>Spent</th><th>Usage</th></tr>
+                          </thead>
+                          <tbody>
+                            ${budgetRows}
+                          </tbody>
+                        </table>
+                      </div>
+                      ` : ''}
+
+                      <div class="section">
+                        <h2>📝 Recent Transactions</h2>
+                        <table>
+                          <thead>
+                            <tr><th>Date</th><th>Name</th><th>Category</th><th>Amount</th></tr>
+                          </thead>
+                          <tbody>
+                            ${expenses.slice(0, 10).map(exp => 
+                              `<tr><td style="padding:8px;border:1px solid #ddd;">${new Date(exp.date).toLocaleDateString()}</td><td style="padding:8px;border:1px solid #ddd;">${exp.name}</td><td style="padding:8px;border:1px solid #ddd;">${exp.category}</td><td style="padding:8px;border:1px solid #ddd;">₱${exp.amount.toFixed(2)}</td></tr>`
+                            ).join('') || '<tr><td colspan="4" style="padding:12px;text-align:center;color:#6b7280;">No transactions yet</td></tr>'}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <button class="print-btn" onclick="window.print()">🖨️ Print Report</button>
+                    </body>
+                  </html>
+                `);
+                reportWindow.document.close();
+              }
+            }}
             style={{
               padding: '16px 12px',
               background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
